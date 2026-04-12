@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepGuard Pro — 딥페이크 & AI 이미지 판별</title>
+    <link rel="stylesheet" href="./css/main.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0e1a%22/><path d=%22M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z%22 fill=%22none%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/><circle cx=%2216%22 cy=%2218%22 r=%223%22 fill=%22%2300e5a0%22/><line x1=%2216%22 y1=%2212%22 x2=%2216%22 y2=%2215%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/></svg>"
+    />
+    <style>
+      .input-tab-bar {
+        display: flex;
+        border-bottom: 1px solid var(--clr-line);
+        margin-bottom: 24px;
+        gap: 4px;
+      }
+      .input-tab-bar .tab-btn {
+        padding: 10px 18px;
+        font-size: 0.875rem;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+        border-radius: 0;
+      }
+      .input-tab-bar .tab-btn.active {
+        color: #fff;
+        border-bottom-color: var(--clr-accent);
+      }
+      .input-tab-bar .tab-btn:hover {
+        color: rgba(255, 255, 255, 0.75);
+      }
+      #image-preview {
+        max-width: 100%;
+        border-radius: var(--radius-md);
+        display: none;
+      }
+      .url-input-row {
+        display: flex;
+        gap: 10px;
+      }
+      .url-input-row .form-input {
+        flex: 1;
+      }
+      .btn--outline-accent {
+        background: transparent;
+        border: 1px solid var(--clr-accent);
+        color: var(--clr-accent);
+      }
+      .btn--outline-accent:hover {
+        background: rgba(0, 229, 160, 0.08);
+      }
+      .live-sub-scores {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .live-sub-score {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: var(--radius-sm);
+        padding: 8px 12px;
+      }
+      .live-sub-score__label {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.35);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 3px;
+      }
+      .live-sub-score__val {
+        font-size: 1rem;
+        font-weight: 700;
+        font-family: var(--font-display);
+      }
+      .chart-legend {
+        display: flex;
+        gap: 16px;
+        margin-top: 8px;
+      }
+      .chart-legend__item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .chart-legend__dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="nav__inner">
+        <a href="./index.html" class="nav__logo">
+          <div class="nav__logo-mark">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 2L14 5v6L8 14 2 11V5L8 2z"
+                stroke="#000"
+                stroke-width="1.5"
+              />
+              <circle cx="8" cy="8" r="2" fill="#000" />
+            </svg>
+          </div>
+          Deep<span>Guard</span>&nbsp;Pro
+        </a>
+        <ul class="nav__links">
+          <li>
+            <a href="./index.html" class="nav__link nav__link--active">분석</a>
+          </li>
+          <li><a href="./history.html" class="nav__link">기록</a></li>
+          <li><a href="./community.html" class="nav__link">커뮤니티</a></li>
+          <li>
+            <a href="./admin-login.html" class="nav__link"
+              >관리자 <span class="nav__badge">ADM</span></a
+            >
+          </li>
+        </ul>
+        <div
+          class="nav__status"
+          id="nav-ai-status"
+          style="cursor: pointer"
+          onclick="DG.GeminiSetup.openModal()"
+          title="Gemini AI 설정"
+        >
+          <span
+            class="status-dot"
+            id="gemini-status-dot"
+            style="background: var(--clr-warn)"
+          ></span>
+          <span id="gemini-status-text">Gemini 설정</span>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <div class="page-hero">
+        <div class="container container--md">
+          <p class="text-label fade-up">
+            Deepfake & AI Image Detection Platform
+          </p>
+          <h1 class="text-display mt-8 fade-up stagger-1">
+            딥페이크 &amp; AI 이미지를<br /><span
+              style="color: var(--clr-accent)"
+              >즉시 판별</span
+            >합니다
+          </h1>
+          <p
+            class="text-muted mt-16 fade-up stagger-2"
+            style="font-size: 1.0625rem; max-width: 520px; line-height: 1.7"
+          >
+            영상·이미지·링크를 분석해
+            <strong style="color: rgba(255, 255, 255, 0.7)"
+              >딥페이크 합성</strong
+            >
+            및 <strong style="color: #a78bfa">AI 생성 이미지</strong> 여부를
+            이중 판별합니다. 파일은 서버로 전송되지 않습니다.
+          </p>
+          <div
+            class="flex gap-10 mt-20 fade-up stagger-3"
+            style="flex-wrap: wrap"
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                background: rgba(255, 59, 92, 0.08);
+                border: 1px solid rgba(255, 59, 92, 0.2);
+                border-radius: 999px;
+                padding: 5px 12px;
+              "
+            >
+              <span
+                style="
+                  width: 6px;
+                  height: 6px;
+                  border-radius: 50%;
+                  background: var(--clr-danger);
+                  flex-shrink: 0;
+                "
+              ></span>
+              <span style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.6)"
+                >딥페이크 탐지</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                background: rgba(167, 139, 250, 0.08);
+                border: 1px solid rgba(167, 139, 250, 0.2);
+                border-radius: 999px;
+                padding: 5px 12px;
+              "
+            >
+              <span
+                style="
+                  width: 6px;
+                  height: 6px;
+                  border-radius: 50%;
+                  background: #a78bfa;
+                  flex-shrink: 0;
+                "
+              ></span>
+              <span style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.6)"
+                >AI 생성 이미지 탐지</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                background: rgba(0, 229, 160, 0.08);
+                border: 1px solid rgba(0, 229, 160, 0.2);
+                border-radius: 999px;
+                padding: 5px 12px;
+              "
+            >
+              <span
+                style="
+                  width: 6px;
+                  height: 6px;
+                  border-radius: 50%;
+                  background: var(--clr-safe);
+                  flex-shrink: 0;
+                "
+              ></span>
+              <span style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.6)"
+                >실시간 분석</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container container--md" style="padding-bottom: 80px">
+        <div class="card p-32 fade-up stagger-2">
+          <!-- Input type tabs -->
+          <div class="input-tab-bar">
+            <button class="tab-btn active" data-input-tab="video">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                style="
+                  display: inline;
+                  margin-right: 6px;
+                  vertical-align: middle;
+                "
+              >
+                <rect x="2" y="2" width="20" height="20" rx="3" />
+                <path
+                  d="M10 8l6 4-6 4V8z"
+                  fill="currentColor"
+                  stroke="none"
+                /></svg
+              >영상
+            </button>
+            <button class="tab-btn" data-input-tab="image">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                style="
+                  display: inline;
+                  margin-right: 6px;
+                  vertical-align: middle;
+                "
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" /></svg
+              >이미지
+            </button>
+            <button class="tab-btn" data-input-tab="url">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                style="
+                  display: inline;
+                  margin-right: 6px;
+                  vertical-align: middle;
+                "
+              >
+                <path
+                  d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"
+                />
+                <path
+                  d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"
+                /></svg
+              >링크
+            </button>
+          </div>
+
+          <!-- Video panel -->
+          <div data-input-panel="video">
+            <div
+              class="upload-zone"
+              id="upload-zone"
+              style="padding: 52px 24px; text-align: center"
+            >
+              <input
+                type="file"
+                id="file-input"
+                accept="video/*"
+                style="display: none"
+              />
+              <div style="pointer-events: none">
+                <svg
+                  width="44"
+                  height="44"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--clr-accent)"
+                  stroke-width="1.5"
+                  style="margin: 0 auto 16px; display: block; opacity: 0.7"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="4" ry="4" />
+                  <path
+                    d="M10 8l6 4-6 4V8z"
+                    fill="var(--clr-accent)"
+                    stroke="none"
+                  />
+                </svg>
+                <p
+                  style="
+                    font-size: 0.9375rem;
+                    color: rgba(255, 255, 255, 0.6);
+                    margin-bottom: 6px;
+                  "
+                >
+                  영상 파일을 끌어다 놓거나 클릭하세요
+                </p>
+                <p class="text-label">MP4 · MOV · AVI · WebM</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image panel -->
+          <div data-input-panel="image" class="hidden">
+            <div
+              class="upload-zone"
+              id="image-upload-zone"
+              style="padding: 52px 24px; text-align: center; cursor: pointer"
+            >
+              <input
+                type="file"
+                id="file-input-img"
+                accept="image/*"
+                style="display: none"
+              />
+              <svg
+                width="44"
+                height="44"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#a78bfa"
+                stroke-width="1.5"
+                style="margin: 0 auto 16px; display: block; opacity: 0.8"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <p
+                style="
+                  font-size: 0.9375rem;
+                  color: rgba(255, 255, 255, 0.6);
+                  margin-bottom: 6px;
+                "
+              >
+                이미지 파일을 끌어다 놓거나 클릭하세요
+              </p>
+              <p class="text-label">JPG · PNG · WebP · GIF · BMP</p>
+              <p
+                style="
+                  font-size: 0.75rem;
+                  color: rgba(167, 139, 250, 0.6);
+                  margin-top: 8px;
+                "
+              >
+                딥페이크 + AI 생성 이중 판별
+              </p>
+            </div>
+          </div>
+
+          <!-- URL panel -->
+          <div data-input-panel="url" class="hidden">
+            <div
+              style="
+                background: var(--clr-surface-2);
+                border: 1px solid var(--clr-line);
+                border-radius: var(--radius-md);
+                padding: 24px;
+              "
+            >
+              <p
+                style="
+                  font-size: 0.875rem;
+                  color: rgba(255, 255, 255, 0.6);
+                  margin-bottom: 14px;
+                "
+              >
+                소셜미디어, 뉴스, 영상 사이트의 게시물 또는 직접 미디어 URL을
+                입력하세요
+              </p>
+              <div class="url-input-row">
+                <input
+                  class="form-input"
+                  id="url-input"
+                  type="url"
+                  placeholder="https://example.com/post/..."
+                />
+                <button class="btn btn--primary btn--sm" id="url-submit-btn">
+                  미디어 추출
+                </button>
+              </div>
+              <p
+                id="url-status"
+                style="font-size: 0.8125rem; margin-top: 10px; min-height: 20px"
+              ></p>
+            </div>
+          </div>
+
+          <!-- File info row -->
+          <div id="file-info" class="hidden mt-20">
+            <div
+              class="flex items-center justify-between"
+              style="
+                background: var(--clr-surface-2);
+                border: 1px solid var(--clr-line);
+                border-radius: var(--radius-md);
+                padding: 14px 18px;
+              "
+            >
+              <div class="flex items-center gap-12">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--clr-accent)"
+                  stroke-width="1.5"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="3" />
+                  <path
+                    d="M10 8l6 4-6 4V8z"
+                    fill="var(--clr-accent)"
+                    stroke="none"
+                  />
+                </svg>
+                <div>
+                  <p
+                    id="file-name"
+                    style="font-size: 0.875rem; font-weight: 500"
+                  ></p>
+                  <p id="file-size" class="text-label mt-4"></p>
+                </div>
+              </div>
+              <button
+                class="btn btn--ghost btn--sm btn--icon"
+                onclick="DG.Analysis.reset()"
+                title="제거"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hash row -->
+          <div id="hash-row" class="hidden mt-16">
+            <div
+              style="
+                background: var(--clr-surface-2);
+                border: 1px solid var(--clr-line);
+                border-radius: var(--radius-md);
+                padding: 16px 18px;
+              "
+            >
+              <div class="flex items-center justify-between mb-10">
+                <p class="text-label">파일 식별자</p>
+                <span id="hash-status-label"></span>
+              </div>
+              <div class="progress-track mb-10">
+                <div
+                  class="progress-fill"
+                  id="hash-progress-fill"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <p
+                id="hash-value"
+                class="mono"
+                style="
+                  font-size: 0.6875rem;
+                  color: rgba(255, 255, 255, 0.3);
+                  word-break: break-all;
+                "
+              ></p>
+            </div>
+          </div>
+
+          <!-- Image preview -->
+          <div id="image-wrap" class="hidden mt-20">
+            <div
+              style="
+                border-radius: var(--radius-md);
+                overflow: hidden;
+                background: rgba(0, 0, 0, 0.5);
+                text-align: center;
+                border: 1px solid var(--clr-line);
+              "
+            >
+              <img
+                id="image-preview"
+                style="max-width: 100%; max-height: 420px; display: none"
+                alt="분석 이미지"
+              />
+            </div>
+          </div>
+
+          <!-- Video preview -->
+          <div id="video-wrap" class="hidden mt-20">
+            <div
+              class="chart-container"
+              style="
+                border-radius: var(--radius-md);
+                overflow: hidden;
+                background: #000;
+                position: relative;
+              "
+            >
+              <video
+                id="video-preview"
+                style="
+                  width: 100%;
+                  display: block;
+                  max-height: 360px;
+                  background: #000;
+                "
+                muted
+                playsinline
+              ></video>
+              <div class="scan-line" id="scan-line"></div>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="flex gap-12 mt-20" style="flex-wrap: wrap">
+            <button
+              id="start-btn"
+              class="btn btn--primary btn--lg"
+              disabled
+              style="flex: 1; min-width: 200px"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              분석하기
+            </button>
+            <button
+              id="stop-btn"
+              class="btn btn--danger btn--lg hidden"
+              style="flex: 1; min-width: 200px"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+              </svg>
+              중단하기
+            </button>
+          </div>
+        </div>
+
+        <!-- Live analysis panel -->
+        <div id="live-panel" class="card mt-16 hidden fade-up">
+          <div
+            style="padding: 24px 28px; border-bottom: 1px solid var(--clr-line)"
+          >
+            <div class="flex items-center justify-between mb-12">
+              <div>
+                <p class="text-label mb-4">실시간 종합 신뢰도</p>
+                <div class="flex items-end gap-12">
+                  <span
+                    id="live-confidence-val"
+                    style="
+                      font-family: var(--font-display);
+                      font-size: 3rem;
+                      font-weight: 800;
+                      line-height: 1;
+                      color: var(--clr-accent);
+                      letter-spacing: -0.04em;
+                    "
+                    >0.0%</span
+                  >
+                  <span
+                    id="frame-count"
+                    class="text-label"
+                    style="margin-bottom: 8px"
+                    >0 프레임</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="confidence-meter">
+              <div
+                class="confidence-meter__fill"
+                id="live-conf-fill"
+                style="width: 0%; background: var(--clr-accent)"
+              ></div>
+            </div>
+            <div class="progress-track mt-8">
+              <div
+                class="progress-fill"
+                id="analysis-progress-fill"
+                style="width: 0%; background: rgba(255, 255, 255, 0.15)"
+              ></div>
+            </div>
+            <!-- Sub-detector scores -->
+            <div class="live-sub-scores mt-12">
+              <div
+                class="live-sub-score"
+                style="border-color: rgba(255, 170, 0, 0.2)"
+              >
+                <div class="live-sub-score__label">🎭 딥페이크</div>
+                <div
+                  class="live-sub-score__val"
+                  id="live-df-val"
+                  style="color: var(--clr-warn)"
+                >
+                  —
+                </div>
+              </div>
+              <div
+                class="live-sub-score"
+                style="border-color: rgba(167, 139, 250, 0.2)"
+              >
+                <div class="live-sub-score__label">🤖 AI 생성</div>
+                <div
+                  class="live-sub-score__val"
+                  id="live-ai-val"
+                  style="color: #a78bfa"
+                >
+                  —
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 20px 24px">
+            <p class="text-label mb-8">신뢰도 타임라인</p>
+            <div class="chart-container" style="height: 160px">
+              <canvas
+                id="confidence-chart"
+                style="width: 100%; height: 100%; display: block"
+              ></canvas>
+            </div>
+            <div class="chart-legend mt-6">
+              <div class="chart-legend__item">
+                <div
+                  class="chart-legend__dot"
+                  style="background: rgba(0, 229, 160, 0.8)"
+                ></div>
+                종합
+              </div>
+              <div class="chart-legend__item">
+                <div
+                  class="chart-legend__dot"
+                  style="background: rgba(255, 170, 0, 0.7)"
+                ></div>
+                딥페이크
+              </div>
+              <div class="chart-legend__item">
+                <div
+                  class="chart-legend__dot"
+                  style="background: rgba(0, 200, 255, 0.6)"
+                ></div>
+                AI생성
+              </div>
+              <div class="chart-legend__item" style="margin-left: auto">
+                <div
+                  class="chart-legend__dot"
+                  style="background: var(--clr-danger)"
+                ></div>
+                위험 임계값 (68%)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- URL Text AI Analysis section (링크 탭 전용) -->
+        <div id="url-text-section" class="hidden"></div>
+
+        <!-- Result section -->
+        <div id="result-section" class="hidden mt-24"></div>
+
+        <!-- Mini history -->
+        <div id="history-mini"></div>
+
+        <!-- Legal section -->
+        <div
+          id="legal-section"
+          class="hidden"
+          style="
+            margin-top: 48px;
+            padding-top: 40px;
+            border-top: 1px solid var(--clr-line);
+          "
+        >
+          <div class="flex items-center gap-12 mb-28">
+            <div
+              style="
+                width: 3px;
+                height: 28px;
+                background: var(--clr-danger);
+                border-radius: 3px;
+                flex-shrink: 0;
+              "
+            ></div>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 700">
+                법적 대응 가이드
+              </h2>
+              <p
+                class="text-muted"
+                style="font-size: 0.875rem; margin-top: 2px"
+              >
+                관련 법령 및 피해자 지원 기관 안내
+              </p>
+            </div>
+          </div>
+          <div
+            style="
+              background: rgba(255, 59, 92, 0.08);
+              border: 1px solid rgba(255, 59, 92, 0.2);
+              border-radius: var(--radius-md);
+              padding: 18px 22px;
+              margin-bottom: 28px;
+              display: flex;
+              gap: 14px;
+              align-items: flex-start;
+            "
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--clr-danger)"
+              stroke-width="2"
+              style="flex-shrink: 0; margin-top: 2px"
+            >
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <div>
+              <p
+                style="
+                  color: var(--clr-danger);
+                  font-weight: 600;
+                  font-size: 0.875rem;
+                "
+              >
+                딥페이크 영상 피해자라면
+              </p>
+              <p
+                style="
+                  color: rgba(255, 100, 120, 0.75);
+                  font-size: 0.8125rem;
+                  margin-top: 4px;
+                  line-height: 1.6;
+                "
+              >
+                증거를 보존하고 즉시 아래 기관에 신고하세요.
+              </p>
+            </div>
+          </div>
+          <div class="grid-3" style="gap: 12px">
+            <a
+              href="https://www.women1366.kr/stopds/"
+              target="_blank"
+              rel="noopener"
+              class="resource-card"
+            >
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 16px;
+                "
+              >
+                <span
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    color: var(--clr-accent);
+                  "
+                  >DSO</span
+                ><span class="badge badge--accent">무료</span>
+              </div>
+              <p
+                style="
+                  font-weight: 600;
+                  font-size: 0.9375rem;
+                  margin-bottom: 6px;
+                "
+              >
+                디지털 성범죄<br />피해자 지원센터
+              </p>
+              <div class="flex items-center gap-8" style="margin-top: auto">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--clr-accent)"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.63 19.79 19.79 0 01.67 2.18 2 2 0 012.63 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.09 6.09l.91-.91a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"
+                  /></svg
+                ><span
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    color: #fff;
+                  "
+                  >02-735-8994</span
+                >
+              </div>
+            </a>
+            <a
+              href="https://www.women1366.kr/"
+              target="_blank"
+              rel="noopener"
+              class="resource-card"
+            >
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 16px;
+                "
+              >
+                <span
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    color: #c084fc;
+                  "
+                  >1366</span
+                ><span
+                  class="badge"
+                  style="
+                    background: rgba(192, 132, 252, 0.1);
+                    color: #c084fc;
+                    border-color: rgba(192, 132, 252, 0.25);
+                  "
+                  >24시간</span
+                >
+              </div>
+              <p
+                style="
+                  font-weight: 600;
+                  font-size: 0.9375rem;
+                  margin-bottom: 6px;
+                "
+              >
+                여성긴급전화
+              </p>
+              <div class="flex items-center gap-8" style="margin-top: auto">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#c084fc"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.63 19.79 19.79 0 01.67 2.18 2 2 0 012.63 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.09 6.09l.91-.91a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"
+                  /></svg
+                ><span
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    color: #fff;
+                  "
+                  >1366</span
+                >
+              </div>
+            </a>
+            <a
+              href="https://ecrm.police.go.kr/"
+              target="_blank"
+              rel="noopener"
+              class="resource-card"
+            >
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 16px;
+                "
+              >
+                <span
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    color: var(--clr-danger);
+                  "
+                  >182</span
+                ><span class="badge badge--danger">신고</span>
+              </div>
+              <p
+                style="
+                  font-weight: 600;
+                  font-size: 0.9375rem;
+                  margin-bottom: 6px;
+                "
+              >
+                경찰청 사이버수사대
+              </p>
+              <div class="flex items-center gap-8" style="margin-top: auto">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--clr-danger)"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.63 19.79 19.79 0 01.67 2.18 2 2 0 012.63 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.09 6.09l.91-.91a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"
+                  /></svg
+                ><span
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    color: #fff;
+                  "
+                  >182</span
+                >
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal" id="modal">
+        <div class="modal__header">
+          <h3
+            id="modal-title"
+            style="font-size: 1.125rem; font-weight: 700"
+          ></h3>
+          <button
+            class="btn btn--ghost btn--icon"
+            style="margin-left: auto"
+            onclick="DG.Modal.close()"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal__body" id="modal-body"></div>
+        <div class="modal__footer">
+          <button id="modal-cancel-btn" class="btn btn--ghost btn--sm">
+            취소
+          </button>
+          <button id="modal-confirm-btn" class="btn btn--primary btn--sm">
+            확인
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./env.js"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/analysis.js"></script>
+    <script src="./js/admin.js"></script>
+    <script src="./js/gemini-setup.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        DG.Analysis.init();
+        DG.Admin.init();
+      });
+    </script>
+  </body>
+</html>

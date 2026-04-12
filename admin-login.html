@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>관리자 로그인 — DeepGuard Pro</title>
+    <link rel="stylesheet" href="./css/main.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0e1a%22/><path d=%22M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z%22 fill=%22none%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/><circle cx=%2216%22 cy=%2218%22 r=%223%22 fill=%22%2300e5a0%22/><line x1=%2216%22 y1=%2212%22 x2=%2216%22 y2=%2215%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/></svg>"
+    />
+  </head>
+  <body
+    style="
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    "
+  >
+    <!-- Background grid -->
+    <div
+      style="
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(0, 200, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 200, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+      "
+    ></div>
+    <div
+      style="
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at 50% 0%,
+          rgba(0, 200, 255, 0.06) 0%,
+          transparent 60%
+        );
+        pointer-events: none;
+      "
+    ></div>
+
+    <div style="width: 100%; max-width: 400px; position: relative">
+      <!-- Logo -->
+      <div
+        class="flex items-center gap-12 mb-40 fade-up"
+        style="justify-content: center"
+      >
+        <div class="nav__logo-mark" style="width: 36px; height: 36px">
+          <svg viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 2L14 5v6L8 14 2 11V5L8 2z"
+              stroke="#000"
+              stroke-width="1.5"
+            />
+            <circle cx="8" cy="8" r="2" fill="#000" />
+          </svg>
+        </div>
+        <span
+          style="
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.25rem;
+          "
+          >Deep<span>Guard</span> Pro</span
+        >
+      </div>
+
+      <div class="card p-32 fade-up stagger-1">
+        <h1 style="font-size: 1.375rem; font-weight: 700; margin-bottom: 6px">
+          관리자 로그인
+        </h1>
+        <p class="text-muted mb-28" style="font-size: 0.875rem">
+          관리자 계정으로 로그인하세요
+        </p>
+
+        <form
+          id="login-form"
+          style="display: flex; flex-direction: column; gap: 16px"
+          onsubmit="return false;"
+        >
+          <div class="form-group">
+            <label class="form-label">아이디</label>
+            <input
+              class="form-input"
+              id="login-username"
+              placeholder="관리자 아이디"
+              autocomplete="username"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">비밀번호</label>
+            <input
+              class="form-input"
+              id="login-password"
+              type="password"
+              placeholder="비밀번호"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div
+            id="login-error"
+            class="hidden"
+            style="
+              background: var(--clr-danger-dim);
+              border: 1px solid rgba(255, 59, 92, 0.25);
+              border-radius: var(--radius-sm);
+              padding: 10px 14px;
+              font-size: 0.875rem;
+              color: var(--clr-danger);
+            "
+          ></div>
+
+          <button
+            type="submit"
+            id="login-btn"
+            class="btn btn--primary w-full"
+            style="margin-top: 4px"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
+            로그인
+          </button>
+        </form>
+
+        <div class="section-rule mt-24">
+          <span>또는</span>
+        </div>
+
+        <a
+          href="./index.html"
+          class="btn btn--ghost w-full mt-4"
+          style="justify-content: center"
+        >
+          일반 사용자로 계속
+        </a>
+      </div>
+
+      <!-- Demo hint -->
+      <div style="margin-top: 16px; text-align: center">
+        <p
+          style="
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            color: rgba(255, 255, 255, 0.2);
+          "
+        >
+          데모: admin / admin1234
+        </p>
+      </div>
+    </div>
+
+    <script src="./env.js"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/admin.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (window.DG && DG.Auth && DG.Auth.isAdmin()) {
+          window.location.href = "./admin.html";
+          return;
+        }
+        if (window.DG && DG.Admin) DG.Admin.init();
+      });
+    </script>
+  </body>
+</html>

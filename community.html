@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>커뮤니티 — DeepGuard Pro</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0e1a%22/><path d=%22M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z%22 fill=%22none%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/><circle cx=%2216%22 cy=%2218%22 r=%223%22 fill=%22%2300e5a0%22/><line x1=%2216%22 y1=%2212%22 x2=%2216%22 y2=%2215%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/></svg>" />
+  <style>
+    .verdict-filter { display:flex; gap:8px; flex-wrap:wrap; }
+    .verdict-filter button { padding:6px 14px; border-radius:20px; font-size:.8125rem; border:1px solid var(--clr-line); background:transparent; color:rgba(255,255,255,.5); cursor:pointer; transition:all .15s; }
+    .verdict-filter button.active, .verdict-filter button:hover { border-color:var(--clr-accent); color:#fff; background:rgba(0,229,160,.06); }
+    .verdict-filter button[data-v="DEEPFAKE"].active   { border-color:var(--clr-danger); color:var(--clr-danger); background:rgba(255,59,92,.06); }
+    .verdict-filter button[data-v="SUSPICIOUS"].active { border-color:var(--clr-warn);   color:var(--clr-warn);   background:rgba(255,170,0,.06); }
+    .verdict-filter button[data-v="AUTHENTIC"].active  { border-color:var(--clr-safe);   color:var(--clr-safe);   background:rgba(0,229,160,.06); }
+    .post-card { background:var(--clr-surface);border:1px solid var(--clr-line);border-radius:var(--radius-md);padding:20px 24px;transition:border-color .15s; }
+    .post-card:hover { border-color:rgba(255,255,255,.15); }
+    .post-card__meta { display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap; }
+    .post-card__body { font-size:.9rem;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:14px; }
+    .post-card__footer { display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:1px solid var(--clr-line);flex-wrap:wrap; }
+    .post-card__source { font-size:.75rem;color:rgba(255,255,255,.3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px; }
+    .post-card__flag { background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3);font-size:.75rem;padding:4px 10px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s; }
+    .post-card__flag:hover { border-color:rgba(255,59,92,.4);color:var(--clr-danger); }
+    .post-card__stats { display:flex;align-items:center;gap:14px; }
+    .type-badge { font-size:.625rem;padding:2px 7px;border-radius:3px;font-family:var(--font-mono);letter-spacing:.04em; }
+    .type-badge--video { background:rgba(0,200,255,.1);color:#00c8ff;border:1px solid rgba(0,200,255,.2); }
+    .type-badge--image { background:rgba(192,132,252,.1);color:#c084fc;border:1px solid rgba(192,132,252,.2); }
+    .type-badge--url   { background:rgba(255,170,0,.1);color:var(--clr-warn);border:1px solid rgba(255,170,0,.2); }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="./index.html" class="nav__logo">
+      <div class="nav__logo-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5v6L8 14 2 11V5L8 2z" stroke="#000" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#000"/></svg>
+      </div>
+      Deep<span>Guard</span>&nbsp;Pro
+    </a>
+    <ul class="nav__links">
+      <li><a href="./index.html"     class="nav__link">분석</a></li>
+      <li><a href="./history.html"   class="nav__link">기록</a></li>
+      <li><a href="./community.html" class="nav__link nav__link--active">커뮤니티</a></li>
+      <li><a href="./admin-login.html"     class="nav__link">관리자 <span class="nav__badge">ADM</span></a></li>
+    </ul>
+    <div class="nav__status"><span class="status-dot"></span><span>AI 엔진 온라인</span></div>
+  </div>
+</nav>
+
+<main>
+  <div class="page-hero" style="padding-bottom:40px">
+    <div class="container container--md">
+      <p class="text-label fade-up">Community</p>
+      <h1 class="text-hero mt-8 fade-up stagger-1">판별 결과 공유</h1>
+      <p class="text-muted mt-12 fade-up stagger-2" style="font-size:.9375rem;max-width:500px;line-height:1.7">
+        분석을 마친 결과를 공유하는 공간입니다. 의심 콘텐츠를 발견하면 직접 판별 후 공유하세요.
+      </p>
+      <div class="flex items-center gap-12 mt-20 fade-up stagger-3">
+        <a href="./index.html" class="btn btn--primary btn--sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          새로 판별하기
+        </a>
+        <p style="font-size:.8125rem;color:rgba(255,255,255,.35)">분석 완료 후 결과 화면에서 공유할 수 있습니다</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container container--md" style="padding-bottom:80px">
+    <!-- Notices -->
+    <div id="notices-section" style="margin-bottom:28px"></div>
+
+    <!-- Stats -->
+    <div class="grid-3 mb-28 fade-up" style="gap:12px">
+      <div class="stat-card">
+        <div class="stat-card__label">총 공유 결과</div>
+        <div class="stat-card__value" id="comm-total">—</div>
+        <div class="stat-card__sublabel">건</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">딥페이크 판정</div>
+        <div class="stat-card__value text-danger" id="comm-deepfake">—</div>
+        <div class="stat-card__sublabel">건</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">정상 판정</div>
+        <div class="stat-card__value text-safe" id="comm-authentic">—</div>
+        <div class="stat-card__sublabel">건</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex items-center justify-between mb-20" style="flex-wrap:wrap;gap:12px">
+      <div class="verdict-filter" id="verdict-filter">
+        <button class="active" data-v="">전체</button>
+        <button data-v="DEEPFAKE">딥페이크 의심</button>
+        <button data-v="SUSPICIOUS">주의 필요</button>
+        <button data-v="AUTHENTIC">정상 판정</button>
+      </div>
+      <p id="comm-count-label" style="font-size:.8125rem;color:rgba(255,255,255,.3)"></p>
+    </div>
+
+    <!-- Posts list -->
+    <div id="community-list" style="display:flex;flex-direction:column;gap:14px"></div>
+    <div id="community-pager" class="flex items-center justify-end gap-8 mt-24"></div>
+  </div>
+</main>
+
+<!-- 신고 modal -->
+<div class="modal-overlay" id="flag-modal-overlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal__header">
+      <div>
+        <h3 style="font-size:1.125rem;font-weight:700">게시물 신고</h3>
+        <p style="font-size:.8125rem;color:rgba(255,255,255,.4);margin-top:4px">허위·부적절한 게시물을 신고합니다</p>
+      </div>
+      <button class="btn btn--ghost btn--icon" style="margin-left:auto;flex-shrink:0" id="flag-modal-close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal__body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="flag-post-id" />
+        <div class="form-group">
+          <label class="form-label">신고 사유 *</label>
+          <select class="form-input" id="flag-reason">
+            <option value="">선택하세요</option>
+            <option value="false_result">판별 결과가 부정확함</option>
+            <option value="privacy">개인정보 침해 우려</option>
+            <option value="harmful">유해 콘텐츠 포함</option>
+            <option value="spam">스팸/광고성 게시물</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">상세 내용 (선택)</label>
+          <textarea class="form-textarea" id="flag-detail" rows="3" placeholder="자세한 내용을 입력해주세요..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button id="flag-cancel-btn"  class="btn btn--ghost btn--sm">취소</button>
+      <button id="flag-submit-btn"  class="btn btn--danger btn--sm">신고 접수</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal__header">
+      <h3 id="modal-title" style="font-size:1.125rem;font-weight:700"></h3>
+      <button class="btn btn--ghost btn--icon" style="margin-left:auto" onclick="DG.Modal.close()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal__body" id="modal-body"></div>
+    <div class="modal__footer">
+      <button id="modal-cancel-btn"  class="btn btn--ghost btn--sm">취소</button>
+      <button id="modal-confirm-btn" class="btn btn--primary btn--sm">확인</button>
+    </div>
+  </div>
+</div>
+
+<script src="./env.js"></script>
+<script src="./js/core.js"></script>
+<script src="./js/admin.js"></script>
+<script>
+(function() {
+  const { API, Toast, verdictMeta, fmtDate, renderPagination } = window.DG;
+  let currentVerdict = '';
+  let currentPage    = 1;
+
+  async function loadStats() {
+    try {
+      const [all, df, auth] = await Promise.all([
+        API.get('/community/posts?pageSize=1'),
+        API.get('/community/posts?pageSize=1&verdict=DEEPFAKE'),
+        API.get('/community/posts?pageSize=1&verdict=AUTHENTIC'),
+      ]);
+      document.getElementById('comm-total').textContent     = all.total  ?? 0;
+      document.getElementById('comm-deepfake').textContent  = df.total   ?? 0;
+      document.getElementById('comm-authentic').textContent = auth.total ?? 0;
+    } catch(e) {}
+  }
+
+  async function loadPosts(page=1, verdict='') {
+    currentPage = page;
+    const list  = document.getElementById('community-list');
+    const pager = document.getElementById('community-pager');
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3)">불러오는 중...</div>`;
+    try {
+      const params = `/community/posts?page=${page}&pageSize=10${verdict?'&verdict='+verdict:''}`;
+      const _res = await API.get(params);
+      const data = _res.items || _res.data || [];
+      const total = _res.total ?? 0;
+      const lbl = document.getElementById('comm-count-label');
+      if (lbl) lbl.textContent = `총 ${total}건`;
+      if (!data?.length) {
+        list.innerHTML = `<div style="text-align:center;padding:60px;color:rgba(255,255,255,.25)">
+          <p style="font-size:2rem;margin-bottom:12px">🔍</p>
+          <p>공유된 판별 결과가 없습니다</p>
+          <a href="./index.html" style="display:inline-block;margin-top:16px;font-size:.875rem;color:var(--clr-accent)">판별하러 가기 →</a>
+        </div>`;
+        return;
+      }
+      list.innerHTML = data.map(renderPost).join('');
+      if (pager) renderPagination(pager, { page, total, pageSize:10, onPage:p=>loadPosts(p,currentVerdict) });
+    } catch(e) {
+      list.innerHTML = `<div style="color:var(--clr-danger);padding:24px;text-align:center">불러오기 실패</div>`;
+    }
+  }
+
+  function confColor(v) {
+    if (v >= 0.7) return 'var(--clr-danger)';
+    if (v >= 0.4) return 'var(--clr-warn)';
+    return 'var(--clr-safe)';
+  }
+
+  function buildSparkline(scores, W=500, H=56) {
+    if (!scores?.length) return '';
+    const P={t:6,b:12,l:6,r:6}, cw=W-P.l-P.r, ch=H-P.t-P.b, n=scores.length;
+    const px=i=>P.l+(n>1?(i/(n-1))*cw:cw/2);
+    const py=v=>P.t+ch-v*ch;
+    const pts=scores.map((v,i)=>`${px(i)},${py(v)}`).join(' ');
+    const area=[...scores.map((v,i)=>`${px(i)},${py(v)}`),`${px(n-1)},${P.t+ch}`,`${px(0)},${P.t+ch}`].join(' ');
+    const thY=py(0.68);
+    return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px;display:block">
+  <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(0,200,255,0.25)"/><stop offset="100%" stop-color="rgba(0,200,255,0)"/></linearGradient></defs>
+  <rect width="${W}" height="${H}" fill="rgba(10,16,26,0.7)"/>
+  <line x1="${P.l}" y1="${thY}" x2="${W-P.r}" y2="${thY}" stroke="rgba(255,59,92,0.4)" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <polygon points="${area}" fill="url(#cg)" opacity="0.8"/>
+  <polyline points="${pts}" fill="none" stroke="rgba(0,200,255,0.9)" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>`;
+  }
+
+  function renderPost(p) {
+    const vm     = verdictMeta(p.verdict);
+    const tc     = p.inputType==='image'?'image':p.inputType==='url'?'url':'video';
+    const tLabel = { video:'VIDEO', image:'IMAGE', url:'URL' }[tc];
+    const tIcon  = { video:'🎬', image:'🖼', url:'🔗' }[tc];
+    const conf   = (p.avgConfidence*100).toFixed(1)+'%';
+    const maxC   = (p.maxConfidence*100).toFixed(1)+'%';
+    const segs   = p.suspiciousSegments || [];
+    const scores = p.scores || [];
+    const pid    = p.id;
+    const srcLabel = p.sourceUrl
+      ? `<a href="${p.sourceUrl}" target="_blank" rel="noopener" style="color:var(--clr-accent);text-decoration:none;word-break:break-all">${(() => { try { return new URL(p.sourceUrl).hostname; } catch { return p.sourceUrl.slice(0,40); } })()}</a>`
+      : (p.fileName ? `<span style="color:rgba(255,255,255,.5)">${escHtml(p.fileName)}</span>` : '<span style="color:rgba(255,255,255,.25)">알 수 없음</span>');
+    const spark = scores.length > 1 ? buildSparkline(scores) : '';
+    return `
+      <div class="post-card">
+        <div class="post-card__meta">
+          <span style="font-size:1rem">${tIcon}</span>
+          <span class="badge badge--${vm.cls}">${vm.label}</span>
+          <span class="type-badge type-badge--${tc}">${tLabel}</span>
+          <span style="font-family:var(--font-mono);font-size:.8125rem;color:${confColor(p.avgConfidence)};font-weight:600">${conf}</span>
+          ${segs.length ? `<span style="font-size:.75rem;color:rgba(255,59,92,.8)">⚠ 의심구간 ${segs.length}개</span>` : ''}
+          <span style="margin-left:auto;font-family:var(--font-mono);font-size:.6875rem;color:rgba(255,255,255,.25)">${fmtDate(p.postedAt)}</span>
+        </div>
+        ${p.memo ? `<p class="post-card__body">${escHtml(p.memo)}</p>` : ''}
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:6px">
+          ${[['평균 신뢰도',conf,confColor(p.avgConfidence)],['최대 신뢰도',maxC,confColor(p.maxConfidence)],['분석 프레임',(p.totalFrames||'—')+' f','rgba(255,255,255,.6)'],['의심 구간',segs.length+'개',segs.length?'var(--clr-danger)':'var(--clr-safe)']].map(([k,v,c])=>`<div style="text-align:center"><p style="font-size:.5625rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">${k}</p><p style="font-family:var(--font-mono);font-size:.875rem;font-weight:700;color:${c}">${v}</p></div>`).join('')}
+        </div>
+        ${p.mediaData ? `<div style="border-radius:8px;overflow:hidden;margin-bottom:10px;border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.25);text-align:center"><img src="${p.mediaData}" alt="판별 미디어" style="max-width:100%;max-height:260px;object-fit:contain;display:block;margin:0 auto" /><p style="font-size:.625rem;color:rgba(255,255,255,.2);padding:4px 10px">판별된 미디어</p></div>` : ''}
+      ${spark ? `<div style="border-radius:4px;overflow:hidden;margin-bottom:10px">${spark}</div>` : ''}
+        ${segs.length ? `<details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:.8125rem;color:rgba(255,59,92,.8);list-style:none;display:flex;align-items:center;gap:6px;padding:4px 0;user-select:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>위조 의심 구간 상세보기</summary><div style="margin-top:8px;padding:10px;background:rgba(255,59,92,.04);border:1px solid rgba(255,59,92,.12);border-radius:6px">${segs.map((s,i)=>`<div style="display:flex;gap:12px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.8125rem;${i===segs.length-1?'border:none':''}"><span style="font-family:var(--font-mono);color:rgba(255,255,255,.3);min-width:24px">#${i+1}</span><span style="font-family:var(--font-mono)">${fmtTime(s.startTime)} → ${fmtTime(s.endTime)}</span><span style="font-family:var(--font-mono);color:var(--clr-danger);margin-left:auto">${(s.avgConfidence*100).toFixed(1)}%</span></div>`).join('')}</div></details>` : ''}
+        <div class="post-card__footer">
+          <div class="post-card__source">${srcLabel}</div>
+          <div class="post-card__stats">
+            ${p.hash ? `<span style="font-family:var(--font-mono);font-size:.625rem;color:rgba(255,255,255,.2)" title="${p.hash}">#${p.hash.slice(0,8)}</span>` : ''}
+            ${p.shareToken ? `<a href="/share.html?token=${p.shareToken}" target="_blank" class="post-card__flag" title="공유 링크 보기" style="text-decoration:none">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              공유
+            </a>` : ''}
+            <button class="post-card__flag" onclick="openFlagModal('${pid}')" title="신고하기">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              신고
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function openFlagModal(postId) {
+    document.getElementById('flag-post-id').value = postId;
+    document.getElementById('flag-reason').value  = '';
+    document.getElementById('flag-detail').value  = '';
+    document.getElementById('flag-modal-overlay').classList.add('is-open');
+  }
+
+  function initFlagModal() {
+    const overlay = document.getElementById('flag-modal-overlay');
+    document.getElementById('flag-modal-close')?.addEventListener('click', ()=>overlay.classList.remove('is-open'));
+    document.getElementById('flag-cancel-btn')?.addEventListener('click',  ()=>overlay.classList.remove('is-open'));
+    overlay?.addEventListener('click', e => { if(e.target===overlay) overlay.classList.remove('is-open'); });
+    document.getElementById('flag-submit-btn')?.addEventListener('click', async () => {
+      const id     = document.getElementById('flag-post-id').value;
+      const reason = document.getElementById('flag-reason').value;
+      if (!reason) { Toast.warn('신고 사유를 선택하세요'); return; }
+      const btn = document.getElementById('flag-submit-btn');
+      btn.disabled=true; btn.textContent='접수 중...';
+      try {
+        await API.post(`/community/posts/${id}/flag`, { reason });
+        overlay.classList.remove('is-open');
+        Toast.success('신고가 접수되었습니다');
+      } catch(e) { Toast.error('신고 접수 실패'); }
+      finally { btn.disabled=false; btn.textContent='신고 접수'; }
+    });
+  }
+
+  function initFilters() {
+    document.querySelectorAll('#verdict-filter button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#verdict-filter button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentVerdict = btn.dataset.v || '';
+        loadPosts(1, currentVerdict);
+      });
+    });
+  }
+
+  window.openFlagModal = openFlagModal;
+
+  async function loadNotices() {
+    const el = document.getElementById('notices-section');
+    if (!el) return;
+    try {
+      const data = await API.get('/notices');
+      const items = (data.items || []).filter(n => n.pinned || true).slice(0, 3);
+      if (!items.length) { el.style.display = 'none'; return; }
+      el.innerHTML = items.map(n => `
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);border-radius:var(--radius-sm);margin-bottom:10px">
+          <span style="font-size:1.1rem;flex-shrink:0">${n.pinned ? '📌' : '📢'}</span>
+          <div style="flex:1;min-width:0">
+            <p style="font-weight:600;font-size:.9rem;margin-bottom:4px">${n.title}</p>
+            <p style="font-size:.8125rem;color:rgba(255,255,255,.55);line-height:1.5;white-space:pre-wrap">${n.content}</p>
+          </div>
+          <span style="font-size:.7rem;color:rgba(255,255,255,.25);font-family:var(--font-mono);flex-shrink:0">${fmtDate(n.createdAt)}</span>
+        </div>`).join('');
+    } catch { el.style.display = 'none'; }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    DG.Admin.init();
+    loadStats();
+    loadPosts();
+    loadNotices();
+    initFilters();
+    initFlagModal();
+  });
+})();
+</script>
+</body>
+</html>

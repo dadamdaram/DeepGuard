@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — DeepGuard Pro</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <style>
+    .admin-sidebar {
+      position: fixed;
+      top: 60px; left: 0; bottom: 0;
+      width: 220px;
+      background: var(--clr-surface-1);
+      border-right: 1px solid var(--clr-line);
+      padding: 24px 0;
+      z-index: 90;
+    }
+    .admin-sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: .875rem;
+      font-weight: 500;
+      color: rgba(255,255,255,.5);
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: all .18s;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .admin-sidebar__item:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.04); }
+    .admin-sidebar__item.active { color: var(--clr-accent); border-left-color: var(--clr-accent); background: var(--clr-accent-dim); }
+    .admin-content { margin-left: 220px; padding: 80px 32px 60px; min-height: 100vh; }
+    @media(max-width:768px) { .admin-sidebar { display:none; } .admin-content { margin-left:0; padding: 80px 16px 40px; } }
+  </style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0e1a%22/><path d=%22M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z%22 fill=%22none%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/><circle cx=%2216%22 cy=%2218%22 r=%223%22 fill=%22%2300e5a0%22/><line x1=%2216%22 y1=%2212%22 x2=%2216%22 y2=%2215%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/></svg>" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="./index.html" class="nav__logo">
+      <div class="nav__logo-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5v6L8 14 2 11V5L8 2z" stroke="#000" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#000"/></svg>
+      </div>
+      Deep<span>Guard</span>&nbsp;Pro
+    </a>
+    <div class="flex items-center gap-16">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--clr-surface-3);border:1px solid var(--clr-line);display:flex;align-items:center;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span style="font-size:.8125rem;color:rgba(255,255,255,.6)" id="admin-username">admin</span>
+        <span class="badge badge--danger" style="font-size:.55rem">ADMIN</span>
+      </div>
+      <button id="admin-logout-btn" class="btn btn--ghost btn--sm">로그아웃</button>
+    </div>
+  </div>
+</nav>
+
+<aside class="admin-sidebar">
+  <div style="padding:0 20px 20px;border-bottom:1px solid var(--clr-line);margin-bottom:12px">
+    <p class="text-label">관리자 패널</p>
+  </div>
+  <button class="admin-sidebar__item active" data-section="moderation" onclick="switchSection('moderation',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    신고 모더레이션
+    <span id="pending-badge" class="badge badge--pending" style="margin-left:auto;font-size:.55rem">0</span>
+  </button>
+  <button class="admin-sidebar__item" data-section="hashes" onclick="switchSection('hashes',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+    해시 검색
+  </button>
+  <button class="admin-sidebar__item" data-section="notices" onclick="switchSection('notices',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    공지사항 관리
+  </button>
+  <div style="padding:16px 20px 12px;margin-top:8px;border-top:1px solid var(--clr-line)">
+    <p class="text-label">빠른 링크</p>
+  </div>
+  <a href="./index.html" class="admin-sidebar__item" style="text-decoration:none">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+    분석 페이지
+  </a>
+  <a href="./community.html" class="admin-sidebar__item" style="text-decoration:none">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    커뮤니티
+  </a>
+</aside>
+
+<div class="admin-content">
+
+  <!-- Stats -->
+  <div class="grid-4 mb-32 fade-up" style="gap:12px">
+    <div class="stat-card">
+      <div class="stat-card__label">대기 신고</div>
+      <div class="stat-card__value text-warn" id="admin-pending-count">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">총 신고</div>
+      <div class="stat-card__value" id="admin-total-count">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">분석 건수</div>
+      <div class="stat-card__value text-accent" id="admin-analysis-count">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">시스템</div>
+      <div class="stat-card__value text-safe" style="font-size:1.25rem">정상</div>
+    </div>
+  </div>
+
+  <!-- Moderation section -->
+  <section id="section-moderation">
+    <div class="flex items-center justify-between mb-20">
+      <h2 class="text-title">신고 모더레이션</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" class="flex items-center">
+        <button class="btn btn--sm active" data-mod-status="PENDING" style="background:var(--clr-warn-dim);color:var(--clr-warn);border:1px solid rgba(255,170,0,.25)">PENDING</button>
+        <button class="btn btn--ghost btn--sm" data-mod-status="FLAGGED" style="color:var(--clr-danger)">🚩 FLAGGED</button>
+        <button class="btn btn--ghost btn--sm" data-mod-status="APPROVED">APPROVED</button>
+        <button class="btn btn--ghost btn--sm" data-mod-status="REJECTED">REJECTED</button>
+        <button class="btn btn--ghost btn--sm" data-mod-status="ALL">전체</button>
+      </div>
+    </div>
+
+    <div class="card" style="overflow:hidden">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>상태</th>
+              <th>제목 / 해시</th>
+              <th>판별</th>
+              <th>신뢰도</th>
+              <th>신고 일시</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="mod-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:40px;color:rgba(255,255,255,.25)">불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="mod-pager" class="flex items-center justify-end gap-8 mt-16"></div>
+  </section>
+
+  <!-- Hash search section -->
+  <section id="section-hashes" class="hidden">
+    <div class="flex items-center justify-between mb-20">
+      <h2 class="text-title">해시 판별 이력 검색</h2>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-24 mb-16 fade-up">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+        <div class="form-group">
+          <label class="form-label">해시값 / 파일명</label>
+          <input class="form-input" id="hash-q" placeholder="검색어 입력..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">판별 결과</label>
+          <select class="form-select" id="hash-verdict">
+            <option value="">전체</option>
+            <option value="DEEPFAKE">DEEPFAKE</option>
+            <option value="SUSPICIOUS">SUSPICIOUS</option>
+            <option value="AUTHENTIC">AUTHENTIC</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">날짜 범위</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="form-input" type="date" id="hash-date-from" style="flex:1" />
+            <span style="color:rgba(255,255,255,.3);font-size:.75rem">~</span>
+            <input class="form-input" type="date" id="hash-date-to" style="flex:1" />
+          </div>
+        </div>
+        <button id="hash-search-btn" class="btn btn--primary" style="height:42px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          검색
+        </button>
+      </div>
+      <div id="hash-total" style="font-family:var(--font-mono);font-size:.75rem;color:rgba(255,255,255,.3);margin-top:12px"></div>
+    </div>
+
+    <div class="card" style="overflow:hidden">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SHA-256 해시</th>
+              <th>파일명</th>
+              <th>판별</th>
+              <th>신뢰도</th>
+              <th>크기</th>
+              <th>분석 일시</th>
+            </tr>
+          </thead>
+          <tbody id="hash-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:40px;color:rgba(255,255,255,.25)">검색 결과가 없습니다</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="hash-pager" class="flex items-center justify-end gap-8 mt-16"></div>
+  </section>
+
+  <!-- Notices section -->
+  <section id="section-notices" class="hidden">
+    <div class="card p-28 mb-24">
+      <h2 class="text-title mb-20">공지사항 관리</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start">
+        <!-- 공지 작성 폼 -->
+        <div>
+          <h3 style="font-size:1rem;font-weight:600;margin-bottom:16px;color:rgba(255,255,255,.8)">새 공지 등록</h3>
+          <div class="form-group mb-14">
+            <label class="form-label">제목 *</label>
+            <input class="form-input" id="notice-title" placeholder="공지 제목을 입력하세요" maxlength="100" />
+          </div>
+          <div class="form-group mb-14">
+            <label class="form-label">내용 *</label>
+            <textarea class="form-textarea" id="notice-content" rows="6" placeholder="공지 내용을 입력하세요..." style="resize:vertical"></textarea>
+          </div>
+          <div class="form-group mb-20" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="notice-pinned" style="width:16px;height:16px;accent-color:var(--clr-accent);cursor:pointer" />
+            <label for="notice-pinned" style="font-size:.875rem;color:rgba(255,255,255,.65);cursor:pointer">📌 최상단 고정</label>
+          </div>
+          <button class="btn btn--primary" id="notice-submit-btn">공지 등록</button>
+        </div>
+        <!-- 공지 목록 -->
+        <div>
+          <div class="flex items-center gap-10 mb-16">
+            <h3 style="font-size:1rem;font-weight:600;color:rgba(255,255,255,.8)">등록된 공지</h3>
+            <button class="btn btn--ghost btn--sm" onclick="DG.Admin.loadNotices()">새로고침</button>
+          </div>
+          <div id="notices-list" style="max-height:480px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal__header">
+      <h3 id="modal-title" style="font-size:1.125rem;font-weight:700"></h3>
+      <button class="btn btn--ghost btn--icon" style="margin-left:auto" onclick="DG.Modal.close()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal__body" id="modal-body"></div>
+    <div class="modal__footer">
+      <button id="modal-cancel-btn" class="btn btn--ghost btn--sm">취소</button>
+      <button id="modal-confirm-btn" class="btn btn--primary btn--sm">확인</button>
+    </div>
+  </div>
+</div>
+
+<script src="./env.js"></script>
+<script src="./js/core.js"></script>
+<script src="./js/admin.js"></script>
+<script>
+  function switchSection(name, btn) {
+    document.querySelectorAll('.admin-sidebar__item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+    btn.classList.add('active');
+    const sec = document.getElementById('section-' + name);
+    if (sec) sec.classList.remove('hidden');
+    // 공지 섹션 진입 시 자동 로드
+    if (name === 'notices') DG.Admin.loadNotices?.();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!window.DG || !DG.Auth || !DG.Auth.isAdmin()) {
+      window.location.href = './admin-login.html';
+      return;
+    }
+    DG.Admin.init();
+  });
+</script>
+</body>
+</html>

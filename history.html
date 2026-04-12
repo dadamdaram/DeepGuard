@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>분석 기록 — DeepGuard Pro</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0e1a%22/><path d=%22M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z%22 fill=%22none%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/><circle cx=%2216%22 cy=%2218%22 r=%223%22 fill=%22%2300e5a0%22/><line x1=%2216%22 y1=%2212%22 x2=%2216%22 y2=%2215%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/></svg>" />
+  <style>
+    .vf-btn{padding:6px 14px;border-radius:20px;font-size:.8125rem;border:1px solid var(--clr-line);background:transparent;color:rgba(255,255,255,.45);cursor:pointer;transition:all .15s}
+    .vf-btn:hover,.vf-btn.active{border-color:var(--clr-accent);color:#fff;background:rgba(0,229,160,.06)}
+    .vf-btn[data-v="DEEPFAKE"].active{border-color:var(--clr-danger);color:var(--clr-danger);background:rgba(255,59,92,.06)}
+    .vf-btn[data-v="SUSPICIOUS"].active{border-color:var(--clr-warn);color:var(--clr-warn);background:rgba(255,170,0,.06)}
+    .vf-btn[data-v="AUTHENTIC"].active{border-color:var(--clr-safe);color:var(--clr-safe);background:rgba(0,229,160,.06)}
+    .hcard{background:var(--clr-surface);border:1px solid var(--clr-line);border-radius:var(--radius-md);overflow:hidden;transition:border-color .15s}
+    .hcard.is-open{border-color:rgba(0,229,160,.35)}
+    .hcard__row{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;flex-wrap:wrap}
+    .hcard__row:hover{background:rgba(255,255,255,.02)}
+    .hcard__chevron{margin-left:auto;flex-shrink:0;color:rgba(255,255,255,.25);transition:transform .2s}
+    .hcard.is-open .hcard__chevron{transform:rotate(180deg);color:var(--clr-accent)}
+    .hcard__detail{display:none;padding:0 18px 20px}
+    .hcard.is-open .hcard__detail{display:block}
+    .tbadge{font-size:.625rem;padding:2px 7px;border-radius:3px;font-family:var(--font-mono);letter-spacing:.04em}
+    .tbadge--video{background:rgba(0,200,255,.1);color:#00c8ff;border:1px solid rgba(0,200,255,.2)}
+    .tbadge--image{background:rgba(192,132,252,.1);color:#c084fc;border:1px solid rgba(192,132,252,.2)}
+    .tbadge--url{background:rgba(255,170,0,.1);color:var(--clr-warn);border:1px solid rgba(255,170,0,.2)}
+    .sparkline-wrap{border-radius:6px;overflow:hidden;margin:10px 0}
+    .seg-table{width:100%;border-collapse:collapse;font-size:.8125rem;margin-top:8px}
+    .seg-table th{text-align:left;padding:6px 10px;color:rgba(255,255,255,.3);font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--clr-line)}
+    .seg-table td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .seg-table tr:last-child td{border-bottom:none}
+    .btn--outline-accent{background:transparent;border:1px solid var(--clr-accent);color:var(--clr-accent)}
+    .btn--outline-accent:hover{background:rgba(0,229,160,.08)}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="./index.html" class="nav__logo">
+      <div class="nav__logo-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5v6L8 14 2 11V5L8 2z" stroke="#000" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#000"/></svg>
+      </div>
+      Deep<span>Guard</span>&nbsp;Pro
+    </a>
+    <ul class="nav__links">
+      <li><a href="./index.html"     class="nav__link">분석</a></li>
+      <li><a href="./history.html"   class="nav__link nav__link--active">기록</a></li>
+      <li><a href="./community.html" class="nav__link">커뮤니티</a></li>
+      <li><a href="./admin-login.html"     class="nav__link">관리자 <span class="nav__badge">ADM</span></a></li>
+    </ul>
+    <div class="nav__status"><span class="status-dot"></span><span>AI 엔진 온라인</span></div>
+  </div>
+</nav>
+
+<main>
+  <div class="page-hero" style="padding-bottom:36px">
+    <div class="container container--md">
+      <p class="text-label fade-up">Analysis History</p>
+      <h1 class="text-display mt-8 fade-up stagger-1">분석 기록</h1>
+      <p class="text-muted mt-12 fade-up stagger-2" style="font-size:.9375rem;max-width:480px;line-height:1.7">
+        과거 판별 결과를 모두 확인하고, 커뮤니티 공유가 가능합니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="container container--md" style="padding-bottom:80px">
+
+    <!-- Stats -->
+    <div class="grid-3 mb-28 fade-up" style="gap:12px">
+      <div class="stat-card">
+        <div class="stat-card__label">전체 분석</div>
+        <div class="stat-card__value" id="s-total">—</div>
+        <div class="stat-card__sublabel">건</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">딥페이크 의심</div>
+        <div class="stat-card__value text-danger" id="s-deepfake">—</div>
+        <div class="stat-card__sublabel">건</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">정상 판정</div>
+        <div class="stat-card__value text-safe" id="s-authentic">—</div>
+        <div class="stat-card__sublabel">건</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="fade-up stagger-1">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="vfilter">
+          <button class="vf-btn active" data-v="">전체</button>
+          <button class="vf-btn" data-v="DEEPFAKE">딥페이크 의심</button>
+          <button class="vf-btn" data-v="SUSPICIOUS">주의 필요</button>
+          <button class="vf-btn" data-v="AUTHENTIC">정상 판정</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap">
+          <select id="type-filter" class="form-input" style="width:auto;padding:7px 12px;font-size:.8125rem">
+            <option value="">전체 유형</option>
+            <option value="video">🎬 영상</option>
+            <option value="image">🖼 이미지</option>
+            <option value="url">🔗 링크</option>
+          </select>
+          <input type="search" id="search-q" class="form-input" placeholder="파일명 검색..." style="width:180px;padding:7px 12px;font-size:.8125rem" />
+        </div>
+      </div>
+      <p id="count-lbl" style="font-size:.8125rem;color:rgba(255,255,255,.3);margin-bottom:16px"></p>
+    </div>
+
+    <!-- List -->
+    <div id="history-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div id="history-pager" class="flex items-center justify-end gap-8 mt-24"></div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal__header">
+      <h3 id="modal-title" style="font-size:1.125rem;font-weight:700"></h3>
+      <button class="btn btn--ghost btn--icon" style="margin-left:auto" onclick="DG.Modal.close()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal__body" id="modal-body"></div>
+    <div class="modal__footer">
+      <button id="modal-cancel-btn"  class="btn btn--ghost btn--sm">취소</button>
+      <button id="modal-confirm-btn" class="btn btn--primary btn--sm">확인</button>
+    </div>
+  </div>
+</div>
+
+<script src="./env.js"></script>
+<script src="./js/core.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { API, Toast, Modal, verdictMeta, fmtDate, fmtBytes, fmtTime, renderPagination, confidenceColor } = window.DG;
+
+  let curPage = 1, curVerdict = '', curType = '', curQ = '';
+  const _cache = {};  // id → record
+
+  /* ── Stats ─────────────────────────────────────────────── */
+  async function loadStats() {
+    try {
+      const [all, df, au] = await Promise.all([
+        API.get('/analyses?pageSize=1'),
+        API.get('/analyses?pageSize=1&verdict=DEEPFAKE'),
+        API.get('/analyses?pageSize=1&verdict=AUTHENTIC'),
+      ]);
+      document.getElementById('s-total').textContent     = all.total ?? 0;
+      document.getElementById('s-deepfake').textContent  = df.total  ?? 0;
+      document.getElementById('s-authentic').textContent = au.total  ?? 0;
+    } catch(e) {}
+  }
+
+  /* ── Load list ──────────────────────────────────────────── */
+  async function loadHistory(page) {
+    curPage = page;
+    const list  = document.getElementById('history-list');
+    const pager = document.getElementById('history-pager');
+    list.innerHTML = `<div style="text-align:center;padding:48px;color:rgba(255,255,255,.3)">불러오는 중...</div>`;
+    try {
+      let qs = `/analyses?page=${page}&pageSize=20`;
+      if (curVerdict) qs += `&verdict=${curVerdict}`;
+      if (curType)    qs += `&inputType=${curType}`;
+      const _r = await API.get(qs);
+      const data = _r.items || _r.data || [];
+      const total = _r.total ?? 0;
+
+      // cache records for share
+      data.forEach(r => { _cache[r.id] = r; });
+
+      // client-side filename search
+      const q = curQ.toLowerCase();
+      const rows = q ? data.filter(r =>
+        (r.fileName||'').toLowerCase().includes(q) ||
+        (r.sourceUrl||'').toLowerCase().includes(q)
+      ) : data;
+
+      document.getElementById('count-lbl').textContent = `총 ${total}건`;
+
+      if (!rows.length) {
+        list.innerHTML = `<div style="text-align:center;padding:64px;color:rgba(255,255,255,.25)">
+          <p style="font-size:2.5rem;margin-bottom:12px">📂</p>
+          <p>조건에 맞는 분석 기록이 없습니다.</p>
+          <a href="./index.html" style="display:inline-block;margin-top:16px;font-size:.875rem;color:var(--clr-accent)">새로 판별하기 →</a>
+        </div>`;
+        pager.innerHTML = ''; return;
+      }
+
+      list.innerHTML = rows.map(renderCard).join('');
+      list.querySelectorAll('.hcard').forEach(card => {
+        card.querySelector('.hcard__row').addEventListener('click', () => {
+          card.classList.toggle('is-open');
+        });
+      });
+
+      renderPagination(pager, { page, total, pageSize: 20, onPage: p => loadHistory(p) });
+    } catch (e) {
+      list.innerHTML = `<div style="color:var(--clr-danger);text-align:center;padding:32px">불러오기 실패</div>`;
+    }
+  }
+
+  /* ── Card HTML ──────────────────────────────────────────── */
+  function renderCard(r) {
+    const vm     = verdictMeta(r.verdict);
+    const tc     = ({ video:'video', image:'image', url:'url' })[r.inputType] || 'video';
+    const tLabel = { video:'VIDEO', image:'IMAGE', url:'URL' }[tc];
+    const tIcon  = { video:'🎬', image:'🖼', url:'🔗' }[tc];
+    const name   = r.fileName || (r.sourceUrl ? (() => { try { return new URL(r.sourceUrl).hostname; } catch { return r.sourceUrl.slice(0,40); } })() : '알 수 없음');
+    const conf   = (r.avgConfidence * 100).toFixed(1) + '%';
+
+    return `
+    <div class="hcard" data-id="${esc(r.id)}">
+      <div class="hcard__row">
+        <span style="font-size:1.1rem;flex-shrink:0">${tIcon}</span>
+        <span class="badge badge--${vm.cls}" style="flex-shrink:0">${vm.label}</span>
+        <span class="tbadge tbadge--${tc}">${tLabel}</span>
+        <span style="font-family:var(--font-mono);font-size:.8125rem;color:${confidenceColor(r.avgConfidence)};flex-shrink:0">${conf}</span>
+        <span style="font-size:.875rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.7)">${escHtml(name)}</span>
+        <span style="font-family:var(--font-mono);font-size:.6875rem;color:rgba(255,255,255,.3);flex-shrink:0">${fmtDate(r.analyzedAt)}</span>
+        <svg class="hcard__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="hcard__detail">
+        ${renderDetail(r)}
+      </div>
+    </div>`;
+  }
+
+  /* ── Detail HTML ────────────────────────────────────────── */
+  function renderDetail(r) {
+    const vm     = verdictMeta(r.verdict);
+    const segs   = r.suspiciousSegments || [];
+    const scores = r.scores || [];
+    const tc     = r.inputType || 'video';
+
+    // 미디어 섹션 (analysisId로 media 캐시 조회)
+    const mediaHtml = r.mediaData ? `
+      <div style="margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.3);text-align:center">
+        <img src="${r.mediaData}" alt="판별 미디어" style="max-width:100%;max-height:320px;object-fit:contain;display:block;margin:0 auto" />
+        <p style="font-size:.6875rem;color:rgba(255,255,255,.25);padding:6px 12px">판별 당시 캡처된 미디어</p>
+      </div>` : '';
+
+    return `<div style="border-top:1px solid var(--clr-line);padding-top:18px">
+
+      <!-- 판별된 미디어 -->
+      ${mediaHtml}
+
+      <!-- Verdict summary -->
+      <div class="verdict-block ${vm.blockCls}" style="margin-bottom:16px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <p class="text-label mb-4">판별 결과</p>
+            <h3 style="font-size:2rem;font-weight:800;line-height:1.1" class="text-${vm.cls}">${vm.label}</h3>
+          </div>
+          <div style="text-align:right">
+            <p class="text-label mb-4">평균 신뢰도</p>
+            <p style="font-family:var(--font-display);font-size:2.5rem;font-weight:800;color:${confidenceColor(r.avgConfidence)};line-height:1;letter-spacing:-.04em">
+              ${(r.avgConfidence * 100).toFixed(1)}%
+            </p>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:16px">
+          ${[
+            ['최대 신뢰도',  (r.maxConfidence*100).toFixed(1)+'%'],
+            ['분석 프레임',  r.totalFrames ? r.totalFrames+' 프레임' : '—'],
+            ['의심 구간',    segs.length+'개'],
+            ['입력 유형',    ({video:'영상',image:'이미지',url:'링크'}[tc]||'영상')],
+            ...(r.fileSize ? [['파일 크기', fmtBytes(r.fileSize)]] : []),
+          ].map(([k,v]) => `
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:10px 12px">
+              <p style="font-size:.6875rem;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">${k}</p>
+              <p style="font-family:var(--font-mono);font-size:.9375rem;font-weight:600;color:rgba(255,255,255,.85)">${v}</p>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Source URL -->
+      ${r.sourceUrl ? `<div style="margin-bottom:14px;font-size:.8125rem;padding:10px 14px;background:rgba(255,170,0,.04);border:1px solid rgba(255,170,0,.15);border-radius:6px">
+        <p style="font-size:.6875rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">출처 URL</p>
+        <a href="${esc(r.sourceUrl)}" target="_blank" rel="noopener" style="color:var(--clr-accent);word-break:break-all">${escHtml(r.sourceUrl)}</a>
+      </div>` : ''}
+
+      <!-- Sparkline -->
+      ${scores.length > 1 ? `<div style="margin-bottom:16px">
+        <p style="font-size:.75rem;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">신뢰도 타임라인</p>
+        <div class="sparkline-wrap">${buildSparklineSVG(scores)}</div>
+        <p style="font-size:.6875rem;color:rgba(255,255,255,.2);margin-top:4px">점선: 딥페이크 판정 임계값 (68%)</p>
+      </div>` : ''}
+
+      <!-- Suspicious segments -->
+      ${segs.length ? `<div style="margin-bottom:16px">
+        <p style="font-size:.75rem;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">위조 의심 구간 (${segs.length}개)</p>
+        <table class="seg-table">
+          <thead><tr><th>구간</th><th>시작</th><th>종료</th><th>신뢰도</th><th></th></tr></thead>
+          <tbody>${segs.map((s,i) => `
+            <tr>
+              <td style="font-family:var(--font-mono);color:rgba(255,255,255,.4)">#${i+1}</td>
+              <td style="font-family:var(--font-mono)">${fmtTime(s.startTime)}</td>
+              <td style="font-family:var(--font-mono)">${fmtTime(s.endTime)}</td>
+              <td style="font-family:var(--font-mono);color:${confidenceColor(s.avgConfidence)}">${(s.avgConfidence*100).toFixed(1)}%</td>
+              <td><span class="badge badge--danger" style="font-size:.5625rem">FAKE</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
+
+      <!-- Hash -->
+      ${r.hash ? `<div style="margin-bottom:20px;padding:12px 14px;background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.1);border-radius:6px">
+        <p style="font-size:.6875rem;color:rgba(255,255,255,.3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">식별 해시</p>
+        <p style="font-family:var(--font-mono);font-size:.75rem;color:var(--clr-accent);word-break:break-all;line-height:1.7">${r.hash}</p>
+      </div>` : ''}
+
+      <!-- Actions -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        
+        <button class="btn btn--outline-accent btn--sm" onclick="histShare('${esc(r.id)}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          커뮤니티 공유
+        </button>
+      </div>
+    </div>`;
+  }
+
+  /* ── Sparkline SVG ──────────────────────────────────────── */
+  function buildSparklineSVG(scores, W=600, H=88) {
+    const P = { t:10, b:20, l:36, r:12 };
+    const cw = W-P.l-P.r, ch = H-P.t-P.b, n = scores.length;
+    const px = i => P.l + (n>1 ? (i/(n-1))*cw : cw/2);
+    const py = v => P.t + ch - v*ch;
+    const linePts = scores.map((v,i) => `${px(i)},${py(v)}`).join(' ');
+    const areaPts = [...scores.map((v,i)=>`${px(i)},${py(v)}`), `${px(n-1)},${P.t+ch}`, `${px(0)},${P.t+ch}`].join(' ');
+    const thY = py(0.68);
+    const yLines = [0,0.25,0.5,0.68,1.0].map(v=>({ y:py(v), label:(v*100).toFixed(0)+'%' }));
+    return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px;display:block">
+  <defs><linearGradient id="sg${W}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="rgba(0,200,255,0.28)"/>
+    <stop offset="100%" stop-color="rgba(0,200,255,0)"/>
+  </linearGradient></defs>
+  <rect width="${W}" height="${H}" fill="rgba(13,21,32,0.9)"/>
+  ${yLines.map(({y,label})=>`<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="${P.l-4}" y="${y+3.5}" fill="rgba(255,255,255,0.22)" font-size="8" text-anchor="end" font-family="monospace">${label}</text>`).join('')}
+  <line x1="${P.l}" y1="${thY}" x2="${W-P.r}" y2="${thY}" stroke="rgba(255,59,92,0.45)" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="${W-P.r-2}" y="${thY-3}" fill="rgba(255,59,92,0.5)" font-size="8" text-anchor="end" font-family="monospace">68%</text>
+  <polygon points="${areaPts}" fill="url(#sg${W})" opacity="0.8"/>
+  <polyline points="${linePts}" fill="none" stroke="rgba(0,200,255,0.9)" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>`;
+  }
+
+  
+
+  /* ── Draw scores as bars (no canvas) ────────────────────── */
+  function drawBars(doc, scores, x, y, w, h) {
+    doc.setFillColor(10,16,28); doc.rect(x,y,w,h,'F');
+    // gridlines
+    [0,0.25,0.5,0.75,1.0].forEach(v => {
+      const gy = y+h-v*h;
+      doc.setDrawColor(35,50,70); doc.setLineWidth(0.2);
+      doc.line(x+8,gy,x+w,gy);
+      doc.setFontSize(6); doc.setTextColor(80,100,130); doc.setFont('helvetica','normal');
+      doc.text((v*100).toFixed(0)+'%', x+6, gy+1.5, { align:'right' });
+    });
+    // 68% threshold
+    const thY = y+h-0.68*h;
+    doc.setDrawColor(255,59,92); doc.setLineWidth(0.4);
+    doc.setLineDashPattern([1.5,1.5],0); doc.line(x+8,thY,x+w,thY); doc.setLineDashPattern([],0);
+    // bars
+    const bW = (w-8)/scores.length;
+    scores.forEach((v,i) => {
+      const bh = Math.max(v*h,0.4), bx = x+8+i*bW, by = y+h-bh;
+      if      (v>=0.68) doc.setFillColor(255,59,92);
+      else if (v>=0.38) doc.setFillColor(255,170,0);
+      else              doc.setFillColor(0,229,160);
+      doc.rect(bx+0.15, by, Math.max(bW-0.3,0.25), bh, 'F');
+    });
+    doc.setDrawColor(40,60,90); doc.setLineWidth(0.3); doc.rect(x,y,w,h);
+  }
+
+  /* ── Community share ────────────────────────────────────── */
+  window.histShare = async function (id) {
+    let r = _cache[id];
+    if (!r) { Toast.error('기록을 찾을 수 없습니다'); return; }
+    // 미디어 데이터가 없으면 서버에서 상세 재조회
+    if (!r.mediaData) {
+      try {
+        const full = await API.get(`/analysis/hash/${r.hash}`);
+        if (full && full.mediaData) { r = { ...r, ...full }; _cache[id] = r; }
+      } catch(e) { /* 실패해도 진행 */ }
+    }
+    Modal.open({
+      title: '커뮤니티에 공유',
+      body: `
+        <p style="font-size:.875rem;color:rgba(255,255,255,.5);margin-bottom:14px">
+          판별 결과를 커뮤니티에 공유합니다. 파일 원본은 업로드되지 않습니다.
+        </p>
+        <div class="form-group">
+          <label class="form-label">코멘트 (선택, 최대 280자)</label>
+          <textarea class="form-textarea" id="share-memo-h" rows="3" placeholder="이 영상/이미지에 대해 한마디..."></textarea>
+        </div>`,
+      confirmLabel: '공유하기',
+      onConfirm: async () => {
+        const memo = document.getElementById('share-memo-h')?.value || '';
+        try {
+          const post = await API.post('/community/posts', {
+            analysisId: r.id, verdict: r.verdict,
+            avgConfidence: r.avgConfidence, maxConfidence: r.maxConfidence,
+            totalFrames: r.totalFrames, suspiciousSegments: r.suspiciousSegments,
+            scores: r.scores||[],
+            fileName: r.fileName||null, inputType: r.inputType||'video',
+            sourceUrl: r.sourceUrl||null, hash: r.hash,
+            mediaData: r.mediaData || null,
+            memo,
+          });
+          const shareLink = `${location.origin}/share.html?token=${post.shareToken}`;
+          Modal.open({
+            title: '공유 링크가 생성되었습니다',
+            body: `
+              <p style="font-size:.875rem;color:rgba(255,255,255,.5);margin-bottom:14px">아래 링크를 공유하면 판별 결과를 함께 볼 수 있습니다.</p>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="share-link-h-input" class="form-input" style="flex:1;font-size:.8125rem;font-family:var(--font-mono)" value="${shareLink}" readonly />
+                <button class="btn btn--primary btn--sm" onclick="navigator.clipboard.writeText(document.getElementById('share-link-h-input').value).then(()=>DG.Toast.success('링크가 복사되었습니다'))">복사</button>
+              </div>
+              <a href="${shareLink}" target="_blank" style="display:inline-block;margin-top:10px;font-size:.8125rem;color:var(--clr-accent)">링크 미리보기 →</a>`,
+            confirmLabel: '확인',
+            cancelLabel: null,
+            onConfirm: () => {},
+          });
+          Toast.success('커뮤니티에 공유되었습니다');
+        } catch (e) { Toast.error('공유 실패: ' + (e.message||'')); }
+      },
+    });
+  };
+
+  /* ── Filters ────────────────────────────────────────────── */
+  function initFilters() {
+    document.querySelectorAll('#vfilter .vf-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#vfilter .vf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        curVerdict = btn.dataset.v || '';
+        loadHistory(1);
+      });
+    });
+    document.getElementById('type-filter').addEventListener('change', e => {
+      curType = e.target.value; loadHistory(1);
+    });
+    let st;
+    document.getElementById('search-q').addEventListener('input', e => {
+      clearTimeout(st);
+      st = setTimeout(() => { curQ = e.target.value.trim(); loadHistory(1); }, 300);
+    });
+  }
+
+  /* ── Script loader ──────────────────────────────────────── */
+  function loadScript(src) {
+    return new Promise((res,rej) => { const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+  }
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function esc(s)     { return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStats();
+    loadHistory(1);
+    initFilters();
+  });
+})();
+</script>
+</body>
+</html>
