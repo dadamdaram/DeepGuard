@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>판별 결과 공유 — DeepGuard Pro</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23060b13%22/><path d=%22M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z%22 fill=%22none%22 stroke=%22%2300c8ff%22 stroke-width=%222%22/><circle cx=%2216%22 cy=%2218%22 r=%223%22 fill=%22%2300c8ff%22/><line x1=%2216%22 y1=%2212%22 x2=%2216%22 y2=%2215%22 stroke=%22%2300c8ff%22 stroke-width=%222%22/></svg>" />
+  <style>
+    .share-wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+    .share-badge { display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:600;letter-spacing:.04em;border:1px solid; }
+    .share-badge--deepfake  { color:var(--clr-danger);border-color:rgba(255,59,92,.4);background:rgba(255,59,92,.08); }
+    .share-badge--suspicious{ color:var(--clr-warn);border-color:rgba(255,170,0,.4);background:rgba(255,170,0,.08); }
+    .share-badge--authentic { color:var(--clr-safe);border-color:rgba(0,229,160,.4);background:rgba(0,229,160,.08); }
+    .media-box { border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.4);margin-bottom:28px;text-align:center; }
+    .media-box img { max-width:100%;max-height:480px;object-fit:contain;display:block;margin:0 auto; }
+    .media-box__caption { font-size:.6875rem;color:rgba(255,255,255,.25);padding:8px 14px;border-top:1px solid rgba(255,255,255,.06); }
+    .stat-row { display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px; }
+    .stat-item { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px 16px; }
+    .stat-item__label { font-size:.6875rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px; }
+    .stat-item__value { font-family:var(--font-mono);font-size:1.0625rem;font-weight:700;color:rgba(255,255,255,.85); }
+    .seg-row { display:flex;gap:12px;align-items:center;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.8125rem; }
+    .seg-row:last-child { border-bottom:none; }
+    .sparkline-wrap { border-radius:6px;overflow:hidden;margin-bottom:20px; }
+    .copy-link-row { display:flex;gap:8px;align-items:center;margin-top:20px; }
+    .share-watermark { text-align:center;padding:28px 0 0;border-top:1px solid rgba(255,255,255,.06);margin-top:32px; }
+    .error-box { text-align:center;padding:80px 20px;color:rgba(255,255,255,.4); }
+    .error-box h2 { font-size:1.5rem;margin-bottom:12px;color:rgba(255,255,255,.65); }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="./index.html" class="nav__logo">
+      <div class="nav__logo-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5v6L8 14 2 11V5L8 2z" stroke="#000" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#000"/></svg>
+      </div>
+      Deep<span>Guard</span>&nbsp;Pro
+    </a>
+    <ul class="nav__links">
+      <li><a href="./index.html"     class="nav__link">분석</a></li>
+      <li><a href="./history.html"   class="nav__link">기록</a></li>
+      <li><a href="./community.html" class="nav__link">커뮤니티</a></li>
+    </ul>
+    <div class="nav__status"><span class="status-dot"></span><span>AI 엔진 온라인</span></div>
+  
+  <!-- Mobile hamburger -->
+  <button class="nav__hamburger" id="nav-hamburger" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+</div><!-- end nav__inner -->
+
+<!-- Mobile drawer (injected by nav) -->
+<div class="nav__mobile-drawer" id="nav-mobile-drawer">
+  <a href="./index.html">분석</a>
+  <a href="./history.html">기록</a>
+  <a href="./community.html">커뮤니티</a>
+  <a href="./admin-login.html">관리자 <span class="nav__badge" style="font-size:.55rem">ADM</span></a>
+</div>
+</nav>
+
+<main>
+  <div id="share-root" class="share-wrap">
+    <div style="text-align:center;padding:80px 0;color:rgba(255,255,255,.3)">
+      <div class="status-dot" style="width:12px;height:12px;margin:0 auto 16px;animation:pulse 1.2s infinite"></div>
+      <p>공유 결과를 불러오는 중...</p>
+    </div>
+  </div>
+</main>
+
+<script src="./env.js"></script>
+<script src="./js/core.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { API, verdictMeta, fmtDate, fmtTime, confidenceColor } = window.DG;
+
+  const token = new URLSearchParams(location.search).get('token');
+  const root  = document.getElementById('share-root');
+
+  if (!token) {
+    showError('유효하지 않은 링크입니다', '공유 링크에 토큰이 포함되어 있지 않습니다.');
+    return;
+  }
+
+  /* ── 데이터 로드 ───────────────────────────────────────────── */
+  API.get(`/share/${token}`).then(post => {
+    render(post);
+  }).catch(e => {
+    showError('결과를 불러올 수 없습니다', e.message || '링크가 만료되었거나 삭제된 게시물입니다.');
+  });
+
+  /* ── 에러 표시 ─────────────────────────────────────────────── */
+  function showError(title, msg) {
+    root.innerHTML = `
+      <div class="error-box">
+        <p style="font-size:3rem;margin-bottom:16px">🔍</p>
+        <h2>${title}</h2>
+        <p>${msg}</p>
+        <a href="./community.html" style="display:inline-block;margin-top:20px;color:var(--clr-accent);font-size:.875rem">커뮤니티로 돌아가기 →</a>
+      </div>`;
+  }
+
+  /* ── 신뢰도 색상 ───────────────────────────────────────────── */
+  function confColor(v) {
+    if (v >= 0.68) return 'var(--clr-danger)';
+    if (v >= 0.38) return 'var(--clr-warn)';
+    return 'var(--clr-safe)';
+  }
+
+  /* ── 스파크라인 ────────────────────────────────────────────── */
+  function buildSparkline(scores, W=640, H=88) {
+    if (!scores || scores.length < 2) return '';
+    const P={t:10,b:20,l:36,r:12}, cw=W-P.l-P.r, ch=H-P.t-P.b, n=scores.length;
+    const px=i=>P.l+(n>1?(i/(n-1))*cw:cw/2);
+    const py=v=>P.t+ch-v*ch;
+    const linePts=scores.map((v,i)=>`${px(i)},${py(v)}`).join(' ');
+    const areaPts=[...scores.map((v,i)=>`${px(i)},${py(v)}`),`${px(n-1)},${P.t+ch}`,`${px(0)},${P.t+ch}`].join(' ');
+    const thY=py(0.68);
+    const yLabels=[0,0.25,0.5,0.68,1.0];
+    return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px;display:block">
+  <defs><linearGradient id="shg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(0,200,255,0.28)"/><stop offset="100%" stop-color="rgba(0,200,255,0)"/></linearGradient></defs>
+  <rect width="${W}" height="${H}" fill="rgba(13,21,32,0.95)"/>
+  ${yLabels.map(v=>{const y=py(v);return`<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="${P.l-4}" y="${y+3.5}" fill="rgba(255,255,255,0.22)" font-size="8" text-anchor="end" font-family="monospace">${(v*100).toFixed(0)}%</text>`;}).join('')}
+  <line x1="${P.l}" y1="${thY}" x2="${W-P.r}" y2="${thY}" stroke="rgba(255,59,92,0.45)" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="${W-P.r-2}" y="${thY-3}" fill="rgba(255,59,92,0.5)" font-size="8" text-anchor="end" font-family="monospace">68%</text>
+  <polygon points="${areaPts}" fill="url(#shg)" opacity="0.8"/>
+  <polyline points="${linePts}" fill="none" stroke="rgba(0,200,255,0.9)" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>`;
+  }
+
+  /* ── 메인 렌더 ─────────────────────────────────────────────── */
+  function render(p) {
+    const vm   = verdictMeta(p.verdict);
+    const segs = p.suspiciousSegments || [];
+    const scores = p.scores || [];
+    const tc   = p.inputType || 'video';
+    const tIcon = {video:'🎬', image:'🖼', url:'🔗'}[tc] || '📄';
+    const tLabel = {video:'VIDEO', image:'IMAGE', url:'URL'}[tc] || 'FILE';
+    const nameLabel = p.fileName
+      ? `<span style="color:rgba(255,255,255,.65)">${escHtml(p.fileName)}</span>`
+      : p.sourceUrl
+        ? `<a href="${escHtml(p.sourceUrl)}" target="_blank" rel="noopener" style="color:var(--clr-accent);word-break:break-all">${escHtml(p.sourceUrl)}</a>`
+        : '<span style="color:rgba(255,255,255,.3)">알 수 없음</span>';
+
+    const shareUrl = location.href;
+    const accentHex = p.verdict==='DEEPFAKE'?'#ff3b5c':p.verdict==='AUTHENTIC'?'#00e5a0':'#ffaa00';
+
+    root.innerHTML = `
+      <!-- Header -->
+      <div style="margin-bottom:28px">
+        <p class="text-label fade-up" style="margin-bottom:8px">
+          <span style="margin-right:10px">🔗 공유된 판별 결과</span>
+          <span style="font-size:.6875rem;color:rgba(255,255,255,.25)">${fmtDate(p.postedAt)}</span>
+        </p>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          <span class="share-badge share-badge--${vm.cls}">${vm.label}</span>
+          <span style="font-size:.75rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:2px 8px;font-family:var(--font-mono)">${tIcon} ${tLabel}</span>
+          <span style="font-family:var(--font-mono);font-size:.9375rem;font-weight:700;color:${confColor(p.avgConfidence)}">${(p.avgConfidence*100).toFixed(1)}%</span>
+        </div>
+        <p style="font-size:.875rem;color:rgba(255,255,255,.45)">${nameLabel}</p>
+      </div>
+
+      <!-- 판별된 미디어 -->
+      ${p.mediaData ? `
+      <div class="media-box fade-up">
+        <img src="${p.mediaData}" alt="판별 미디어" />
+        <div class="media-box__caption">판별 당시 캡처된 미디어 — 원본 파일이 아닌 분석용 캡처 이미지입니다</div>
+      </div>` : ''}
+
+      <!-- 분석 결과 카드 -->
+      <div class="card p-24 fade-up" style="border-color:${accentHex}33;margin-bottom:20px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px">
+          <div>
+            <p class="text-label mb-6">판별 결과</p>
+            <h2 style="font-size:2.25rem;font-weight:800;color:${accentHex};line-height:1.1;margin:0">${vm.label}</h2>
+          </div>
+          <div style="text-align:right">
+            <p class="text-label mb-6">딥페이크 신뢰도</p>
+            <p style="font-family:var(--font-display);font-size:2.75rem;font-weight:800;color:${confColor(p.avgConfidence)};line-height:1;letter-spacing:-.04em;margin:0">${(p.avgConfidence*100).toFixed(1)}%</p>
+          </div>
+        </div>
+
+        <!-- Stats grid -->
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-item__label">최대 신뢰도</div>
+            <div class="stat-item__value" style="color:${confColor(p.maxConfidence)}">${(p.maxConfidence*100).toFixed(1)}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-item__label">분석 프레임</div>
+            <div class="stat-item__value">${p.totalFrames ? p.totalFrames+' f' : '—'}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-item__label">의심 구간</div>
+            <div class="stat-item__value" style="color:${segs.length?'var(--clr-danger)':'var(--clr-safe)'}">${segs.length}개</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-item__label">입력 유형</div>
+            <div class="stat-item__value">${tIcon} ${tLabel}</div>
+          </div>
+        </div>
+
+        <!-- 신뢰도 타임라인 -->
+        ${scores.length > 1 ? `
+        <div style="margin-top:4px">
+          <p style="font-size:.75rem;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">신뢰도 타임라인</p>
+          <div class="sparkline-wrap">${buildSparkline(scores)}</div>
+          <p style="font-size:.6875rem;color:rgba(255,255,255,.2);margin-top:4px">점선: 딥페이크 판정 임계값 (68%)</p>
+        </div>` : ''}
+      </div>
+
+      <!-- 메모 -->
+      ${p.memo ? `
+      <div class="card p-20 fade-up" style="margin-bottom:20px">
+        <p class="text-label mb-8">공유자 코멘트</p>
+        <p style="font-size:.9375rem;color:rgba(255,255,255,.7);line-height:1.7">${escHtml(p.memo)}</p>
+      </div>` : ''}
+
+      <!-- 위조 의심 구간 -->
+      ${segs.length ? `
+      <div class="card p-20 fade-up" style="margin-bottom:20px;border-color:rgba(255,59,92,.25)">
+        <p class="text-label mb-12" style="color:rgba(255,59,92,.8)">위조 의심 구간 (${segs.length}개)</p>
+        <div style="border:1px solid rgba(255,59,92,.1);border-radius:6px;overflow:hidden">
+          ${segs.map((s,i)=>`
+          <div class="seg-row">
+            <span style="font-family:var(--font-mono);color:rgba(255,255,255,.3);min-width:28px">#${i+1}</span>
+            <span style="font-family:var(--font-mono)">${fmtTime(s.startTime)} → ${fmtTime(s.endTime)}</span>
+            <span style="font-family:var(--font-mono);color:var(--clr-danger);margin-left:auto">${(s.avgConfidence*100).toFixed(1)}%</span>
+            <span class="badge badge--danger" style="font-size:.5625rem">FAKE</span>
+          </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- 해시 -->
+      ${p.hash ? `
+      <div class="card p-16 fade-up" style="margin-bottom:20px;border-color:rgba(0,200,255,.15)">
+        <p class="text-label mb-6">식별 해시</p>
+        <p style="font-family:var(--font-mono);font-size:.75rem;color:var(--clr-accent);word-break:break-all;line-height:1.7">${p.hash}</p>
+      </div>` : ''}
+
+      <!-- 공유 링크 복사 -->
+      <div class="card p-20 fade-up" style="margin-bottom:20px">
+        <p class="text-label mb-10">이 결과 공유하기</p>
+        <div class="copy-link-row">
+          <input id="copy-link-input" class="form-input" style="flex:1;font-size:.8125rem;font-family:var(--font-mono)" value="${shareUrl}" readonly />
+          <button class="btn btn--primary btn--sm" onclick="
+            navigator.clipboard.writeText(document.getElementById('copy-link-input').value)
+              .then(()=>{ const b=this; b.textContent='복사됨 ✓'; setTimeout(()=>b.textContent='링크 복사',1800); })
+              .catch(()=>{ document.getElementById('copy-link-input').select(); });
+          ">링크 복사</button>
+        </div>
+      </div>
+
+      <!-- 워터마크 -->
+      <div class="share-watermark fade-up">
+        <a href="./index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:rgba(255,255,255,.4)">
+          <svg width="18" height="18" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#0a0e1a"/><path d="M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z" fill="none" stroke="#00e5a0" stroke-width="2"/><circle cx="16" cy="18" r="3" fill="#00e5a0"/><line x1="16" y1="12" x2="16" y2="15" stroke="#00e5a0" stroke-width="2"/></svg>
+          <span style="font-size:.875rem;font-weight:600">DeepGuard Pro</span>
+        </a>
+        <p style="font-size:.75rem;color:rgba(255,255,255,.2);margin-top:8px">본 결과는 AI 기반 분석이며 법적 효력을 위해서는 전문가 검토가 필요합니다.</p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+          <a href="./index.html"     style="font-size:.8125rem;color:var(--clr-accent)">새로 판별하기</a>
+          <a href="./community.html" style="font-size:.8125rem;color:rgba(255,255,255,.35)">커뮤니티 보기</a>
+        </div>
+      </div>`;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+})();
+</script>
+
+<script>
+/* Mobile nav toggle */
+(function() {
+  var btn = document.getElementById('nav-hamburger');
+  var drawer = document.getElementById('nav-mobile-drawer');
+  if (!btn || !drawer) return;
+  // Mark current page link active
+  var links = drawer.querySelectorAll('a');
+  links.forEach(function(a) {
+    if (a.href.split('/').pop() === location.pathname.split('/').pop()) {
+      a.classList.add('active');
+    }
+  });
+  btn.addEventListener('click', function() {
+    var open = drawer.classList.toggle('is-open');
+    btn.classList.toggle('is-open', open);
+    btn.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+  });
+  // Close on outside click
+  document.addEventListener('click', function(e) {
+    if (!btn.contains(e.target) && !drawer.contains(e.target)) {
+      drawer.classList.remove('is-open');
+      btn.classList.remove('is-open');
+    }
+  });
+})();
+</script>
+</body>
+</html>

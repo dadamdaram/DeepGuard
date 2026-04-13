@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>커뮤니티 — DeepGuard Pro</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0e1a%22/><path d=%22M16 6 L26 11 V17 C26 22 21 26 16 28 C11 26 6 22 6 17 V11 Z%22 fill=%22none%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/><circle cx=%2216%22 cy=%2218%22 r=%223%22 fill=%22%2300e5a0%22/><line x1=%2216%22 y1=%2212%22 x2=%2216%22 y2=%2215%22 stroke=%22%2300e5a0%22 stroke-width=%222%22/></svg>" />
+  <style>
+    .feed{display:flex;flex-direction:column;gap:1px;}
+    .pcard{background:var(--clr-surface-1);border-bottom:1px solid var(--clr-line);transition:background .15s;}
+    .pcard:first-child{border-top:1px solid var(--clr-line);border-radius:var(--radius-md) var(--radius-md) 0 0;}
+    .pcard:last-child{border-radius:0 0 var(--radius-md) var(--radius-md);border-bottom:none;}
+    .pcard:only-child{border-radius:var(--radius-md);border-bottom:1px solid var(--clr-line);}
+    .pcard:hover{background:var(--clr-surface-2);}
+    .pcard__top{display:flex;align-items:center;gap:8px;padding:14px 18px 0;flex-wrap:wrap;}
+    .pcard__verdict{font-size:.65rem;font-weight:800;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.07em;border-radius:4px;padding:3px 7px;}
+    .pcard__verdict--danger{background:rgba(255,59,92,.12);color:var(--clr-danger);border:1px solid rgba(255,59,92,.25);}
+    .pcard__verdict--warn{background:rgba(255,170,0,.1);color:var(--clr-warn);border:1px solid rgba(255,170,0,.2);}
+    .pcard__verdict--safe{background:rgba(0,229,160,.08);color:var(--clr-safe);border:1px solid rgba(0,229,160,.2);}
+    .pcard__type{font-size:.65rem;font-family:var(--font-mono);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:2px 6px;}
+    .pcard__dt{font-size:.65rem;border-radius:4px;padding:2px 6px;font-weight:700;}
+    .pcard__dt--df{background:rgba(255,59,92,.08);color:rgba(255,80,100,.8);border:1px solid rgba(255,59,92,.15);}
+    .pcard__dt--ai{background:rgba(167,139,250,.08);color:rgba(167,139,250,.8);border:1px solid rgba(167,139,250,.15);}
+    .pcard__conf{font-size:.8rem;font-family:var(--font-mono);font-weight:700;margin-left:auto;}
+    .pcard__time{font-size:.62rem;color:rgba(255,255,255,.22);font-family:var(--font-mono);}
+    .pcard__body{padding:8px 18px 0;display:flex;gap:12px;align-items:flex-start;}
+    .pcard__memo{font-size:.875rem;color:rgba(255,255,255,.62);line-height:1.6;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .pcard__thumb{width:50px;height:50px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+    .pcard__bar{height:2px;background:rgba(255,255,255,.06);border-radius:1px;margin:10px 18px 0;overflow:hidden;}
+    .pcard__bar-fill{height:100%;border-radius:1px;transition:width .6s cubic-bezier(.16,1,.3,1);}
+    /* Action bar */
+    .pcard__actions{display:flex;align-items:center;padding:6px 10px 10px;gap:2px;}
+    .act-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:none;border-radius:6px;padding:5px 8px;font-size:.78rem;color:rgba(255,255,255,.32);cursor:pointer;transition:all .15s;font-family:var(--font-body);}
+    .act-btn:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);}
+    .act-btn.liked{color:#f87171;}
+    .act-btn.liked svg{fill:#f87171;stroke:#f87171;}
+    .act-btn--delete:hover{color:var(--clr-danger);background:rgba(255,59,92,.06);}
+    .act-btn--flag:hover{color:rgba(255,170,0,.8);background:rgba(255,170,0,.05);}
+    /* Comments */
+    .comments-wrap{border-top:1px solid var(--clr-line);background:rgba(0,0,0,.15);}
+    .comments-wrap.hidden{display:none;}
+    .comment-item{display:flex;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.04);}
+    .comment-item:last-child{border-bottom:none;}
+    .comment-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,rgba(0,200,255,.25),rgba(167,139,250,.25));display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:rgba(255,255,255,.55);flex-shrink:0;}
+    .comment-nick{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.6);}
+    .comment-time{font-size:.62rem;color:rgba(255,255,255,.2);font-family:var(--font-mono);margin-left:6px;}
+    .comment-text{font-size:.82rem;color:rgba(255,255,255,.52);line-height:1.5;margin-top:2px;word-break:break-word;}
+    .comment-del{background:none;border:none;color:rgba(255,59,92,.35);cursor:pointer;font-size:.68rem;padding:2px 5px;border-radius:3px;margin-left:auto;}
+    .comment-del:hover{color:var(--clr-danger);}
+    .comment-form{display:flex;gap:8px;padding:8px 18px 12px;align-items:flex-end;}
+    .comment-input{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 11px;color:#fff;font-size:.82rem;font-family:var(--font-body);resize:none;min-height:34px;max-height:80px;line-height:1.5;transition:border-color .15s;}
+    .comment-input:focus{outline:none;border-color:rgba(0,200,255,.3);}
+    .comment-input::placeholder{color:rgba(255,255,255,.18);}
+    .comment-submit{background:var(--clr-accent);color:#000;border:none;border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;}
+    .comment-submit:hover{opacity:.85;}
+    /* Stats strip */
+    .stats-strip{display:flex;gap:24px;padding:0 0 20px;}
+    .stat-val{font-size:1.6rem;font-weight:800;font-family:var(--font-display);line-height:1;}
+    .stat-lbl{font-size:.62rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.28);margin-top:3px;}
+    /* Chips */
+    .filter-chips{display:flex;gap:5px;flex-wrap:wrap;}
+    .chip{padding:5px 13px;border-radius:999px;font-size:.78rem;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.42);cursor:pointer;transition:all .15s;font-family:var(--font-body);}
+    .chip.active,.chip:hover{border-color:var(--clr-accent);color:rgba(255,255,255,.85);background:rgba(0,200,255,.06);}
+    .chip[data-v="DEEPFAKE"].active{border-color:var(--clr-danger);color:var(--clr-danger);background:rgba(255,59,92,.06);}
+    .chip[data-v="SUSPICIOUS"].active{border-color:var(--clr-warn);color:var(--clr-warn);background:rgba(255,170,0,.06);}
+    .chip[data-v="AUTHENTIC"].active{border-color:var(--clr-safe);color:var(--clr-safe);background:rgba(0,229,160,.06);}
+    /* Empty */
+    .feed-empty{text-align:center;padding:56px 24px;color:rgba(255,255,255,.22);}
+    /* Flag modal */
+    .flag-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
+    .flag-overlay.open{opacity:1;pointer-events:all;}
+    .flag-dialog{background:#0d1520;border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-lg);padding:22px;max-width:380px;width:100%;transform:translateY(10px);transition:transform .2s;}
+    .flag-overlay.open .flag-dialog{transform:translateY(0);}
+  </style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="./index.html" class="nav__logo">
+      <div class="nav__logo-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5v6L8 14 2 11V5L8 2z" stroke="#000" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#000"/></svg>
+      </div>
+      Deep<span>Guard</span>&nbsp;Pro
+    </a>
+    <ul class="nav__links">
+      <li><a href="./index.html"     class="nav__link">분석</a></li>
+      <li><a href="./history.html"   class="nav__link">기록</a></li>
+      <li><a href="./community.html" class="nav__link nav__link--active">커뮤니티</a></li>
+      <li><a href="./admin-login.html" class="nav__link">관리자 <span class="nav__badge">ADM</span></a></li>
+    </ul>
+    <div class="nav__status"><span class="status-dot"></span><span>AI 온라인</span></div>
+  </div>
+</nav>
+
+<main>
+  <div class="container container--md" style="padding-top:36px;padding-bottom:80px">
+    <!-- Header -->
+    <div class="fade-up" style="margin-bottom:24px">
+      <p class="text-label" style="color:var(--clr-accent);margin-bottom:6px">Community Feed</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <h1 style="font-size:1.6rem;font-weight:800;letter-spacing:-.02em">판별 결과 공유</h1>
+        <a href="./index.html" class="btn btn--primary btn--sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          새로 판별
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-strip fade-up">
+      <div><div class="stat-val" id="st-total" style="color:rgba(255,255,255,.85)">—</div><div class="stat-lbl">전체</div></div>
+      <div><div class="stat-val text-danger" id="st-fake">—</div><div class="stat-lbl">딥페이크</div></div>
+      <div><div class="stat-val text-safe" id="st-auth">—</div><div class="stat-lbl">정상</div></div>
+    </div>
+
+    <!-- Notices -->
+    <div id="notices-section" style="margin-bottom:16px"></div>
+
+    <!-- Filters -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="filter-chips" id="filter-chips">
+        <button class="chip active" data-v="">전체</button>
+        <button class="chip" data-v="DEEPFAKE">🎭 딥페이크</button>
+        <button class="chip" data-v="SUSPICIOUS">⚠ 주의</button>
+        <button class="chip" data-v="AUTHENTIC">✓ 정상</button>
+      </div>
+      <span id="count-lbl" style="font-size:.72rem;color:rgba(255,255,255,.22);font-family:var(--font-mono)"></span>
+    </div>
+
+    <!-- Feed -->
+    <div id="feed" class="feed"></div>
+    <div id="pager" class="flex items-center justify-end gap-8 mt-20"></div>
+  </div>
+</main>
+
+<!-- Flag modal -->
+<div class="flag-overlay" id="flag-overlay">
+  <div class="flag-dialog">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:.95rem;font-weight:700">게시물 신고</h3>
+      <button onclick="closeFlagModal()" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;padding:4px">✕</button>
+    </div>
+    <input type="hidden" id="flag-pid" />
+    <select id="flag-reason" class="form-input" style="margin-bottom:10px">
+      <option value="">신고 사유 선택</option>
+      <option value="false_result">판별 결과 부정확</option>
+      <option value="privacy">개인정보 침해</option>
+      <option value="harmful">유해 콘텐츠</option>
+      <option value="spam">스팸/광고</option>
+      <option value="other">기타</option>
+    </select>
+    <textarea id="flag-detail" class="form-input" rows="2" placeholder="상세 내용 (선택)" style="resize:none;margin-bottom:12px"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closeFlagModal()" class="btn btn--ghost btn--sm">취소</button>
+      <button onclick="submitFlag()" class="btn btn--danger btn--sm">신고</button>
+    </div>
+  </div>
+</div>
+
+<script src="./env.js"></script>
+<script src="./js/core.js"></script>
+<script src="./js/admin.js"></script>
+<script>
+(function(){
+  const { API, Toast, verdictMeta, fmtDate, renderPagination } = window.DG;
+
+  /* ── Client ID (for likes dedup) ── */
+  const CLIENT_ID = (()=>{
+    const k='dg_cid';let id=localStorage.getItem(k);
+    if(!id){id=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36));localStorage.setItem(k,id);}
+    return id;
+  })();
+
+  const MY_TOKENS_KEY='dg_my_edit_tokens';
+  function getMyTokens(){try{return JSON.parse(localStorage.getItem(MY_TOKENS_KEY)||'{}');}catch{return {};}}
+  function saveToken(k,v){const t=getMyTokens();t[k]=v;localStorage.setItem(MY_TOKENS_KEY,JSON.stringify(t));}
+
+  let currentVerdict='',currentPage=1;
+  const openComments=new Set();
+
+  async function loadStats(){
+    try{
+      const[all,df,auth]=await Promise.all([
+        API.get('/community/posts?pageSize=1'),
+        API.get('/community/posts?pageSize=1&verdict=DEEPFAKE'),
+        API.get('/community/posts?pageSize=1&verdict=AUTHENTIC'),
+      ]);
+      document.getElementById('st-total').textContent=all.total??0;
+      document.getElementById('st-fake').textContent=df.total??0;
+      document.getElementById('st-auth').textContent=auth.total??0;
+    }catch{}
+  }
+
+  async function loadPosts(page=1,verdict=''){
+    currentPage=page;
+    const feed=document.getElementById('feed');
+    const pager=document.getElementById('pager');
+    feed.innerHTML=`<div class="feed-empty"><p>⏳</p><p style="font-size:.85rem;margin-top:8px">불러오는 중…</p></div>`;
+    try{
+      const r=await API.get(`/community/posts?page=${page}&pageSize=12${verdict?'&verdict='+verdict:''}`);
+      const items=r.items||r.data||[];
+      document.getElementById('count-lbl').textContent=`${r.total??0}건`;
+      if(!items.length){
+        feed.innerHTML=`<div class="feed-empty"><p style="font-size:2rem;margin-bottom:8px">🔍</p><p style="font-size:.85rem">게시물이 없습니다</p></div>`;
+        if(pager)pager.innerHTML='';return;
+      }
+      feed.innerHTML=items.map(renderPost).join('');
+      if(pager)renderPagination(pager,{page,total:r.total??0,pageSize:12,onPage:p=>loadPosts(p,currentVerdict)});
+      items.forEach(p=>syncLikeUI(p.id,p.likes||0));
+    }catch(e){
+      feed.innerHTML=`<div class="feed-empty"><p>⚠</p><p style="font-size:.85rem;margin-top:8px">불러오기 실패</p></div>`;
+    }
+  }
+
+  function confColor(v){return v>=.7?'var(--clr-danger)':v>=.4?'var(--clr-warn)':'var(--clr-safe)';}
+
+  function renderPost(p){
+    const vm=verdictMeta(p.verdict);
+    const vCls=vm.cls==='danger'?'danger':vm.cls==='warn'?'warn':'safe';
+    const conf=((p.avgConfidence||0)*100).toFixed(1)+'%';
+    const pct=((p.avgConfidence||0)*100).toFixed(0);
+    const barColor=confColor(p.avgConfidence||0);
+    const myTokens=getMyTokens();
+    const isOwn=!!myTokens[p.id];
+    const typeLabel={video:'VIDEO',image:'IMAGE',url:'URL'}[p.inputType]||'FILE';
+    const dtLabel=p.detectionType==='AI_GENERATED'?'🤖 AI 생성':p.detectionType==='DEEPFAKE_MANIPULATED'?'🎭 딥페이크':'';
+    const dtCls=p.detectionType==='AI_GENERATED'?'ai':'df';
+    const srcDomain=p.sourceUrl?(()=>{try{return new URL(p.sourceUrl).hostname;}catch{return p.sourceUrl.slice(0,28);}})():'';
+    const liked=JSON.parse(localStorage.getItem('dg_liked')||'{}')[p.id];
+    const cc=p.commentCount||0;
+    return `<div class="pcard" id="pcard-${p.id}">
+      <div class="pcard__top">
+        <span class="pcard__verdict pcard__verdict--${vCls}">${vm.label}</span>
+        <span class="pcard__type">${typeLabel}</span>
+        ${dtLabel?`<span class="pcard__dt pcard__dt--${dtCls}">${dtLabel}</span>`:''}
+        <span class="pcard__conf" style="color:${barColor}">${conf}</span>
+        <span class="pcard__time">${fmtDate(p.postedAt)}</span>
+      </div>
+      ${(p.memo||p.mediaData)?`<div class="pcard__body">
+        ${p.memo?`<p class="pcard__memo">${esc(p.memo)}</p>`:''}
+        ${p.mediaData?`<img src="${p.mediaData}" class="pcard__thumb" alt=""/>`:''}
+      </div>`:''}
+      <div class="pcard__bar"><div class="pcard__bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      ${srcDomain?`<div style="padding:5px 18px 0;display:flex;align-items:center;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><a href="${esc(p.sourceUrl)}" target="_blank" rel="noopener" style="font-size:.68rem;color:var(--clr-accent);text-decoration:none">${esc(srcDomain)}</a></div>`:''}
+      <div class="pcard__actions">
+        <button class="act-btn${liked?' liked':''}" id="like-${p.id}" onclick="toggleLike('${p.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span id="lc-${p.id}">${p.likes||0}</span>
+        </button>
+        <button class="act-btn" onclick="toggleComments('${p.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span id="cc-${p.id}">${cc}</span>
+        </button>
+        ${p.shareToken?`<a href="./share.html?token=${p.shareToken}" target="_blank" class="act-btn" style="text-decoration:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></a>`:''}
+        <div style="margin-left:auto;display:flex;gap:1px">
+          ${isOwn?`<button class="act-btn act-btn--delete" onclick="deletePost('${p.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg> 삭제</button>`:''}
+          <button class="act-btn act-btn--flag" onclick="openFlagModal('${p.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
+        </div>
+      </div>
+      <div class="comments-wrap hidden" id="cw-${p.id}">
+        <div id="cl-${p.id}" style="padding-top:2px"></div>
+        <div class="comment-form">
+          <textarea class="comment-input" id="ci-${p.id}" placeholder="댓글 입력…" rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitComment('${p.id}');}"></textarea>
+          <button class="comment-submit" onclick="submitComment('${p.id}')">등록</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /* ── Like ── */
+  window.toggleLike=async function(pid){
+    const btn=document.getElementById(`like-${pid}`);
+    if(btn)btn.disabled=true;
+    try{
+      const r=await API.post(`/community/posts/${pid}/like`,{clientId:CLIENT_ID});
+      const m=JSON.parse(localStorage.getItem('dg_liked')||'{}');
+      m[pid]=r.liked;localStorage.setItem('dg_liked',JSON.stringify(m));
+      const ce=document.getElementById(`lc-${pid}`);
+      if(ce)ce.textContent=r.likes;
+      if(btn){btn.classList.toggle('liked',r.liked);const s=btn.querySelector('svg');if(s)s.setAttribute('fill',r.liked?'currentColor':'none');}
+    }catch{Toast.error('처리 실패');}
+    finally{if(btn)btn.disabled=false;}
+  };
+
+  function syncLikeUI(pid,likes){
+    const m=JSON.parse(localStorage.getItem('dg_liked')||'{}');
+    if(m[pid]){const btn=document.getElementById(`like-${pid}`);if(btn){btn.classList.add('liked');const s=btn.querySelector('svg');if(s)s.setAttribute('fill','currentColor');}}
+    const ce=document.getElementById(`lc-${pid}`);if(ce)ce.textContent=likes;
+  }
+
+  /* ── Comments ── */
+  window.toggleComments=async function(pid){
+    const wrap=document.getElementById(`cw-${pid}`);
+    if(!wrap)return;
+    if(openComments.has(pid)){openComments.delete(pid);wrap.classList.add('hidden');}
+    else{openComments.add(pid);wrap.classList.remove('hidden');await loadComments(pid);}
+  };
+
+  async function loadComments(pid){
+    const listEl=document.getElementById(`cl-${pid}`);
+    if(!listEl)return;
+    listEl.innerHTML=`<div style="padding:10px 18px;font-size:.78rem;color:rgba(255,255,255,.2)">불러오는 중…</div>`;
+    try{
+      const r=await API.get(`/community/posts/${pid}/comments`);
+      const items=r.items||[];
+      listEl.innerHTML=items.length?items.map(c=>renderComment(c,pid)).join(''):
+        `<div style="padding:10px 18px;font-size:.78rem;color:rgba(255,255,255,.18)">첫 댓글을 남겨보세요</div>`;
+    }catch{listEl.innerHTML=`<div style="padding:10px 18px;font-size:.78rem;color:var(--clr-danger)">로드 실패</div>`;}
+  }
+
+  function renderComment(c,pid){
+    const myT=getMyTokens();const isOwn=myT[`c_${c.id}`]===c.editToken;
+    const nick=c.nickname||'익명';
+    return `<div class="comment-item" id="comment-${c.id}">
+      <div class="comment-avatar">${nick.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center">
+          <span class="comment-nick">${esc(nick)}</span>
+          <span class="comment-time">${fmtDate(c.createdAt)}</span>
+          ${isOwn?`<button class="comment-del" onclick="deleteComment('${pid}','${c.id}')">삭제</button>`:''}
+        </div>
+        <p class="comment-text">${esc(c.text)}</p>
+      </div>
+    </div>`;
+  }
+
+  window.submitComment=async function(pid){
+    const inp=document.getElementById(`ci-${pid}`);
+    const text=inp?.value.trim();if(!text)return;
+    const editToken=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
+    try{
+      const c=await API.post(`/community/posts/${pid}/comments`,{text,nickname:'익명',editToken});
+      saveToken(`c_${c.id}`,editToken);inp.value='';
+      const ce=document.getElementById(`cc-${pid}`);if(ce)ce.textContent=parseInt(ce.textContent||0)+1;
+      const listEl=document.getElementById(`cl-${pid}`);
+      if(listEl){
+        if(listEl.querySelector('div')?.textContent.includes('첫 댓글'))listEl.innerHTML='';
+        listEl.insertAdjacentHTML('beforeend',renderComment(c,pid));
+      }
+    }catch{Toast.error('댓글 등록 실패');}
+  };
+
+  window.deleteComment=async function(pid,cid){
+    const myT=getMyTokens();const et=myT[`c_${cid}`];
+    if(!et){Toast.error('삭제 권한 없음');return;}
+    try{
+      await API.delete(`/community/posts/${pid}/comments/${cid}`,{editToken:et});
+      document.getElementById(`comment-${cid}`)?.remove();
+      const ce=document.getElementById(`cc-${pid}`);if(ce)ce.textContent=Math.max(0,parseInt(ce.textContent||0)-1);
+    }catch{Toast.error('댓글 삭제 실패');}
+  };
+
+  /* ── Delete own post ── */
+  window.deletePost=async function(pid){
+    if(!confirm('게시물을 삭제할까요?'))return;
+    const et=getMyTokens()[pid];
+    if(!et){Toast.error('삭제 권한 없음');return;}
+    try{
+      await fetch(`/api/community/posts/${pid}`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({editToken:et})});
+      const el=document.getElementById(`pcard-${pid}`);
+      if(el){el.style.transition='opacity .3s,height .3s';el.style.opacity='0';setTimeout(()=>{el.style.height=el.offsetHeight+'px';setTimeout(()=>{el.style.height='0';el.style.overflow='hidden';setTimeout(()=>el.remove(),300)},50)},300);}
+      Toast.success('삭제되었습니다');loadStats();
+    }catch{Toast.error('삭제 실패');}
+  };
+
+  /* ── Flag ── */
+  window.openFlagModal=function(pid){
+    document.getElementById('flag-pid').value=pid;
+    document.getElementById('flag-reason').value='';
+    document.getElementById('flag-detail').value='';
+    document.getElementById('flag-overlay').classList.add('open');
+  };
+  window.closeFlagModal=function(){document.getElementById('flag-overlay').classList.remove('open');};
+  window.submitFlag=async function(){
+    const pid=document.getElementById('flag-pid').value;
+    const reason=document.getElementById('flag-reason').value;
+    if(!reason){Toast.warn('신고 사유를 선택하세요');return;}
+    try{
+      await API.post(`/community/posts/${pid}/flag`,{reason,detail:document.getElementById('flag-detail').value});
+      Toast.success('신고 접수되었습니다');closeFlagModal();
+    }catch{Toast.error('신고 실패');}
+  };
+  document.getElementById('flag-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeFlagModal();});
+
+  /* ── Filter chips ── */
+  document.getElementById('filter-chips').addEventListener('click',e=>{
+    const chip=e.target.closest('[data-v]');if(!chip)return;
+    document.querySelectorAll('#filter-chips .chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');currentVerdict=chip.dataset.v;loadPosts(1,currentVerdict);
+  });
+
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  /* ── Init ── */
+  loadStats();loadPosts(1,'');
+
+  /* editToken saver — called from analysis.js after share */
+  window._saveEditToken=function(postId,token){saveToken(postId,token);};
+})();
+</script>
+</body>
+</html>
