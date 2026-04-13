@@ -103,6 +103,7 @@ deepguard/
 
 점수화 가중치?
 
+```bash
 “Gemini의 의미 기반 판단이 전체 정확도에 더 크게 기여한다고 판단해서
 가중치를 높게 설정, 포렌식 분석은 노이즈가 있지만 중요한 보조 신호라
 낮은 비율로 결합한 경험적(Heuristic) 가중치
@@ -117,7 +118,7 @@ deepguard/
 
 🧠 Analysis Pipeline
 
-Web Worker (Pixel Forensics)
+Web Worker (Pixel Forensics) <br>
 브라우저의 메인 스레드와 분리된 Web Worker에서
 이미지의 물리적·통계적 특성을 분석하여 AI 생성 여부를 판단
 
@@ -157,6 +158,7 @@ Chain-of-Thought Prompting
 
 (4) deepfakeConfidence
 → 딥페이크 확률 (%)
+```
 
 ---
 
