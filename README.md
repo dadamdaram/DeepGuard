@@ -118,7 +118,8 @@ deepguard/
 
 🧠 Analysis Pipeline
 
-Web Worker (Pixel Forensics) <br>
+Web Worker (Pixel Forensics):
+
 브라우저의 메인 스레드와 분리된 Web Worker에서
 이미지의 물리적·통계적 특성을 분석하여 AI 생성 여부를 판단
 
@@ -133,7 +134,7 @@ Web Worker (Pixel Forensics) <br>
 
 (3) GAN Checkerboard Artifacts
 → 생성 모델에서 발생하는 격자 패턴 탐지 - 생성 모델 특유의 패턴 O?
-(\* 업샘플링 과정(ConvTranspose)에서 생기는 대표적 인공 흔적)
+(업샘플링 과정(ConvTranspose)에서 생기는 대표적 인공 흔적)
 
 (4) Vignetting Analysis
 → 렌즈 가장자리 어두워짐의 자연스러움 평가 - 균일함 or 부자연스러움?
