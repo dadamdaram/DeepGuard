@@ -26,13 +26,16 @@ Google Gemini Vision AI와 로컬 픽셀 포렌식을 병렬 실행해 이중으
 
 ```bash
 npm install
+
 # .env 생성
-GEMINI_API_KEY=AIza...
-ADMIN_PASSWORD=yourpw
-PORT=3001
+# GEMINI_API_KEY=AIza...
+# ADMIN_PASSWORD=yourpw
+# PORT=3001
 
 node server.js
 # → http://localhost:3001
+
+후 api key를 로컬에 입력
 ```
 
 ---
@@ -69,31 +72,31 @@ deepguard/
          ▼
  ① 해시 생성 (SHA-256)
     └─ 서버에 캐시 여부 확인
-       ├─ 캐시 히트 → 즉시 이전 결과 반환 ──────────────────────┐
-       └─ 캐시 없음 → 분석 시작                                  │
-                                                                  │
-         ▼                                                        │
- ② createImageBitmap() — 픽셀 디코딩                             │
-    └─ 영상: requestVideoFrameCallback()으로 프레임 단위 추출     │
-    └─ 이미지: File 객체 → ImageBitmap 변환                      │
-    └─ URL: 서버 프록시(/api/url-image-proxy)로 CORS 우회        │
-         │                                                        │
-         ├────────────────────────────────────────┐              │
-         ▼                                        ▼              │
- ③ Web Worker (별도 스레드)             ④ Gemini Vision API      │
-    픽셀 포렌식                             (서버 경유)            │
-    ├─ CFA 노이즈 매핑                   Chain-of-Thought 프롬프트│
-    ├─ 조명 비일관성                     → aiVerdict              │
-    ├─ GAN 체커보드 아티팩트             → deepfakeVerdict        │
-    ├─ 비네팅 분석                       → aiConfidence           │
-    └─ 기하학 노이즈                     → deepfakeConfidence     │
-         │                                        │              │
-         └────────────────┬───────────────────────┘              │
-                          ▼                                       │
-                ⑤ 점수 결합                                       │
-                   final = Gemini × 0.92 + Local × 0.08          │
-                           │                                      │
-                           ▼                                      │
+       ├─ 캐시 히트 → 즉시 이전 결과 반환     ──────────────────────┐
+       └─ 캐시 없음 → 분석 시작
+
+         ▼
+ ② createImageBitmap() — 픽셀 디코딩
+    └─ 영상: requestVideoFrameCallback()으로 프레임 단위 추출
+    └─ 이미지: File 객체 → ImageBitmap 변환
+    └─ URL: 서버 프록시(/api/url-image-proxy)로 CORS 우회
+         │
+         ├────────────────────────────────────────┐
+         ▼                                        ▼
+ ③ Web Worker (별도 스레드)             ④ Gemini Vision API
+    픽셀 포렌식                             (서버 경유)
+    ├─ CFA 노이즈 매핑                   Chain-of-Thought 프롬프트
+    ├─ 조명 비일관성                     → aiVerdict
+    ├─ GAN 체커보드 아티팩트             → deepfakeVerdict
+    ├─ 비네팅 분석                       → aiConfidence
+    └─ 기하학 노이즈                     → deepfakeConfidence
+         │                                        │
+         └────────────────┬───────────────────────┘
+                          ▼
+                ⑤ 점수 결합
+                   final = Gemini × 0.92 + Local × 0.08
+                           │
+                           ▼
                 ⑥ 판정 & 서버 저장 ◄──────────────────────────── ┘
                    DEEPFAKE / SUSPICIOUS / AUTHENTIC
 ```
