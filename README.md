@@ -101,6 +101,63 @@ deepguard/
                    DEEPFAKE / SUSPICIOUS / AUTHENTIC
 ```
 
+점수화 가중치?
+
+“Gemini의 의미 기반 판단이 전체 정확도에 더 크게 기여한다고 판단해서
+가중치를 높게 설정, 포렌식 분석은 노이즈가 있지만 중요한 보조 신호라
+낮은 비율로 결합한 경험적(Heuristic) 가중치
+
+#Gemini (0.92)
+장점: 전체 맥락 이해(얼굴, 손, 배경), 딥페이크 특징 잘 잡음, 최신 생성 모델 패턴 반영
+단점: 정확도 문제, 물리적 근거 부족
+
+#Local 포렌식 (0.08)
+장점: 물리적 특징, 확실한 증거(CFA/노이즈/조명)
+단점: 노이즈 많음, 이미지 압축/리사이즈 취약, 단독 판단 불안정
+
+🧠 Analysis Pipeline
+
+Web Worker (Pixel Forensics)
+브라우저의 메인 스레드와 분리된 Web Worker에서
+이미지의 물리적·통계적 특성을 분석하여 AI 생성 여부를 판단
+
+(1) CFA Noise Mapping (Color Filter Array Noise)
+→ 카메라 센서 특유의 노이즈 패턴 존재 여부 분석 - 패턴 X or 불규칙?
+
+(실제 카메라 센서는 RGB 필터 배열(Bayer Pattern)을 통해 이미지 생성.
+이 과정에서 일정한 노이즈 패턴 발생)
+
+(2) 조명 비일관성(Lighting Inconsistency)
+→ 광원 방향, 그림자 등의 물리적 일관성 검증 - 빛의 방향 일관성 X?
+
+(3) GAN Checkerboard Artifacts
+→ 생성 모델에서 발생하는 격자 패턴 탐지 - 생성 모델 특유의 패턴 O?
+(\* 업샘플링 과정(ConvTranspose)에서 생기는 대표적 인공 흔적)
+
+(4) Vignetting Analysis
+→ 렌즈 가장자리 어두워짐의 자연스러움 평가 - 균일함 or 부자연스러움?
+
+(5) Geometric Distortion
+→ 객체 구조(얼굴, 손, 직선 등)의 형태, 비율 구조의 일관성 & 왜곡 여부 분석
+
+Gemini Vision API (Semantic Analysis)
+
+이미지의 맥락 및 자연스러움을 기반으로 종합 판단
+
+Chain-of-Thought Prompting
+→ 단계적 분석을 통해 결과 신뢰도 향상
+(1) aiVerdict
+→ AI 생성 여부 (AI_GENERATED / AUTHENTIC)
+
+(2) deepfakeVerdict
+→ 딥페이크 여부 (DEEPFAKE / REAL)
+
+(3) aiConfidence
+→ AI 생성 확률 (%)
+
+(4) deepfakeConfidence
+→ 딥페이크 확률 (%)
+
 ---
 
 ## 기술 상세 — 왜, 어떻게 구현했는가
@@ -147,11 +204,20 @@ const { data } = ctx.getImageData(0, 0, sz, sz);
 브라우저가 영상의 새 프레임을 화면에 렌더링하기 직전에 콜백을 호출하는 HTML5 Video 확장 API입니다.
 
 **왜 setInterval을 안 쓰는가?**
-`setInterval(fn, 33)`은 33ms마다 무조건 실행되지만 영상 재생 속도와 무관합니다. 같은 프레임을 여러 번 처리하거나 프레임을 건너뛸 수 있습니다. `requestVideoFrameCallback`은 새 프레임이 디코드된 직후 정확히 한 번만 호출됩니다.
+`setInterval(fn, 33)`은 33ms (= "frmae 간격" = 영상 속도) 마다 무조건 실행되지만 영상 재생 속도와 무관합니다. 같은 프레임을 여러 번 처리하거나 프레임을 건너뛸 수 있습니다. `requestVideoFrameCallback`은 새 프레임이 디코드된 직후 정확히 한 번만 호출됩니다.
+
+(영상 = 1초에 약 30장의 사진이 지나감 (30FPS), 5장 중 1 장만 분석
+
+(ex. 33ms = skip, 66ms = skip, 99 ms = skip, 132ms = skip, 165ms = "분석")
+-> 5번째 마다 들어온 프레임(샘플링) 분석
+
+대부분 영상 - 기본 프레임 속도 : 30 FPS 기준 → 1프레임 ≈ 33ms )
+
+(ex. 1000 ms = 1초, 총 6장 사용)
 
 ```js
 // js/analysis.js
-const SAMPLE_RATE = 5; // 5프레임마다 1번만 분석 (초당 약 6프레임 처리)
+const SAMPLE_RATE = 5; // "샘플링 비율" = 몇 개 건너뛸 지, 5프레임마다 1번만 분석 (초당 약 6프레임 처리)
 
 function onFrame(now, metadata) {
   frameCount++;
@@ -492,6 +558,19 @@ app.get("/api/url-image-proxy", async (req, res) => {
 **Chain-of-Thought란?**
 "이게 가짜냐?"라고 단순히 묻는 대신, 단계별 추론을 요구하는 프롬프트 기법입니다. AI가 중간 분석 과정을 거치면 최종 판단의 정확도와 일관성이 높아집니다.
 
+모델이 단계적으로 이미지를 분석하도록 프롬프트를 구조화하여 구성
+
+{
+"steps": [
+"조명 및 그림자 일관성 분석",
+"텍스처 및 디테일 자연스러움 검토",
+"객체 구조 및 해부학적 정확성 확인",
+"AI 생성/딥페이크 신호 종합 판단"
+]
+}
+
+→ 단순 결과가 아니라 분석 과정 기반 판단 유도
+
 ````js
 // server.js
 const prompt = `You are a forensic AI expert. Analyze step by step:
@@ -522,6 +601,38 @@ text = text
   .trim();
 const parsed = JSON.parse(text);
 ````
+
+✔ aiVerdict / deepfakeVerdict
+
+모델 출력 형식을 고정된 JSON 스키마로 강제
+
+{
+"aiVerdict": "AI_GENERATED | AUTHENTIC",
+"deepfakeVerdict": "DEEPFAKE | REAL"
+}
+
+→ 문자열 분기 처리로 프론트에서 바로 사용 가능
+
+✔ aiConfidence / deepfakeConfidence
+
+모델이 판단한 결과를 수치화된 확률 값으로 반환
+
+{
+"aiConfidence": 0-100,
+"deepfakeConfidence": 0-100
+}
+
+→ 내부적으로는
+
+각 분석 단계 결과를 종합
+최종 판단에 대한 신뢰도 점수로 출력
+🔧 전체 출력 구조
+{
+"aiVerdict": "AI_GENERATED",
+"deepfakeVerdict": "DEEPFAKE",
+"aiConfidence": 87,
+"deepfakeConfidence": 91
+}
 
 ---
 
