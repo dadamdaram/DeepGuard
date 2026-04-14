@@ -1,3 +1,7 @@
+ing branch 의 문서를 확인해주세요
+https://github.com/dadamdaram/DeepGuard/tree/ing
+
+
 # DeepGuard Pro
 
 **딥페이크·AI 생성 이미지 실시간 판별 플랫폼**
